@@ -1,4 +1,12 @@
+def lens1memnamegen(nmems):
+    memstr=[]
+    for imem in range(0,nmems,1):
+        memstr1 = str(imem+1).zfill(3)
+        if (imem > 34):
+            memstr1 = str(imem-35+101).zfill(3)
+        memstr.append(memstr1)
 
+    return memstr
 
 def lens2memnamegen(nmems):
     """Generate the member names for LENS2 simulations
@@ -32,7 +40,7 @@ def lens2memnamegen(nmems):
             memstr.append(memstr1+'.'+memstr2)
 
         if ((imem >= 40) and (imem < 50)):
-            memstr1=str(1401)
+            memstr1=str(1301)
             memstr2=str(imem-40+1).zfill(3)
             memstr.append(memstr1+'.'+memstr2)
 
