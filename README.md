@@ -2,6 +2,18 @@
 
 ## Climate analysis python tools
 
+Here we are gathering various python functions and jupyter notebook examples that can be used for common climate analysis tasks, such as reading in large datasets, calculating regional averages, modes, statistical analysis etc.
+
+### Installing Utilities
+
+Assuming you have cloned this github repostory to $DIR, in order to install the python functions located in ./CASutils which form the basis of this package you will need to do the following
+
+```bash
+cd $DIR
+pip install -e . --user
+```
+
+
 ## Code examples
 
 Located in ./examples
