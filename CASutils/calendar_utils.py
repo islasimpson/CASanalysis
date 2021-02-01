@@ -11,6 +11,8 @@ dpm = {'noleap': [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
        '366_day': [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
        '360_day': [0, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]}
 
+dpseas = {'DJF': 90, 'MAM': 92, 'JJA': 92, 'SON': 91 }
+
 def leap_year(year, calendar='standard'):
     """Determine if year is a leap year
     Args: 
@@ -109,4 +111,54 @@ def season_ts(ds, var, season):
 #             ds_season = ds_season.drop_sel( year = [iyear] )
 #
     return ds_season
+
+def group_season_daily(ds,  season):
+    """ Group daily data in to seasons 
+    """
+    ds_season = ds.where(ds['time.season'] == season)
+    years = ds['time.year']
+    ybeg = np.array(years[0])
+    yend = np.array(years[len(years)-1])
+    months = ds['time.month']
+    mbeg = np.array(months[0])
+    mend = np.array(months[len(months)-1])
+
+    if (season == 'DJF'):
+        if (mbeg < 12):
+            # remove any januarys and februaries in the first year
+            ds = ds.where(~((ds['time.year'] == ybeg) & ((ds['time.month'] == 1) | (ds['time.month'] == 2))))
+
+        if (mend > 2):
+            # remove december in the last year
+            ds = ds.where(~((ds['time.year'] == yend) & (ds['time.month'] == 12)))
+
+    ds_season = ds.where(ds['time.season'] == season).dropna("time", how="all")
+    nyears = ds_season.time.size/dpseas[season] 
+
+    # get coords for output
+    dims = ds.dims
+    dimout=["year", "mon"]
+    outcoords = [('year', ybeg + np.arange(nyears)), ('day', np.arange(dpseas[season]))]
+    for icoord in range(1,len(dims)):
+        dimout.append(dims[icoord])
+        outcoords.append( (dims[icoord], ds[dims[icoord]]))
+
+    # check you have an integer number of years
+    if (nyears == int(nyears)):
+        # get output dimensions (nyears, ndays, ...)
+        outdims = [ int(nyears), dpseas[season] ]
+        for i in ds_season.shape[1::]:
+            outdims.append(i)
+        # reshape array, convert to xarray and assign coords  
+        datout = np.reshape(np.array(ds_season), outdims)
+        datout = xr.DataArray(datout, coords = outcoords)
+    else:
+        print("You don't seem to have the right number of days to have an integer number of "+season+" seasons")
+        print("ndays = "+ds_season.time.size)
+        sys.exit()
+
+
+
+
+    return datout 
 
