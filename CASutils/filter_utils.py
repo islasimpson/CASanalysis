@@ -37,8 +37,10 @@ def calc_season_nharm(darray, nharms, dimtime=0):
         print("you got nans")
         i = np.arange(ntime)
         for j in np.array(nanels[0]):
-            mask = np.isfinite(darray_np[:,j])
-            darray_np[:,j] = np.interp(i,i[mask],darray_np[mask,j])
+            # check if there are values that are not Nan's
+            if (~np.isnan(darray_np[:,j]).any()):
+                mask = np.isfinite(darray_np[:,j])
+                darray_np[:,j] = np.interp(i,i[mask],darray_np[mask,j])
 
     tempft = fft(darray_np, axis=0)
     tempft2 = np.zeros_like(tempft)
