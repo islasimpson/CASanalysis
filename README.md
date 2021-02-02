@@ -21,3 +21,4 @@ Located in ./examples
 * **output_lens1_seasons_prect.ipynb** = reading in 1979-2014 for LENS1 from mojave and calculating yearly seasonal averages.
 * **output_lens2_seasons_prect.ipynb** = reading in 1979-2014 for LENS2 from mojave and calculating yeraly seasonal averages.
 * **readisddata.ipynb** = reading ISD station data from mojave.  parses inventory files and csv data files and chooses stations based on data availability for a required period.  Outputs to netcdf.
+* **grabera5t2m_from_rda.ipynb** = getting daily mean 2m temperature from the ERA5 archive on the CISL RDA.  Reads in hourly data on a 0.25 deg grid, calculates daily mean and regrids to the CESM grid.
