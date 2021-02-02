@@ -1,6 +1,8 @@
 ## routines for calculating seasonal climatology and seasonal timeseries
 import xarray as xr
 import numpy as np
+from datetime import timedelta, datetime
+import pandas as pd
 
 dpm = {'noleap': [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
        '365_day': [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
@@ -115,6 +117,13 @@ def season_ts(ds, var, season):
 def group_season_daily(ds,  season):
     """ Group daily data in to seasons 
     """
+
+    #move the time axis to the first 
+    if (ds.dims[0] != 'time'):
+        print('moving time axis to the start')
+        ds = ds.transpose("time",...)
+
+
     ds_season = ds.where(ds['time.season'] == season)
     years = ds['time.year']
     ybeg = np.array(years[0])
@@ -161,4 +170,22 @@ def group_season_daily(ds,  season):
 
 
     return datout 
+
+def fracofyear2date(time, caltype='standard'):
+    """Convert a time series that is in terms of fractions of a year
+    """
+    year = time.astype(int)
+    ly =np.array( [leap_year(i, calendar=caltype) for i in year])
+    day = (time - year)*(365 + ly)
+    d = pd.to_timedelta(day, unit="d")
+    d1 = pd.to_datetime(year, format="%Y")
+    date = d + d1
+
+    #d = timedelta(days= ( time - year )*(365+leap_year(year, calendar=caltype)))
+    #d = timedelta(days = np.float((time-year)*365))
+    #d1 = datetime(year, 1, 1)
+    #date = d + d1
+    return date 
+
+
 
