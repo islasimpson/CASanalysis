@@ -6,7 +6,28 @@ import numpy as np
 from pandas import Timedelta as timedelta
 import sys
 
-def read_sfc_cesm(filepath, datestart, dateend, var="minimal"):
+def read_cesm_h0(filepath, datestart, dateend, var):
+    """Read in a variable from CESM history files.  Adapted for 
+    CESM's wierd calendar.  Setting the time axis as the average of time_bnds
+    """
+
+    dat = xr.open_mfdataset(fpath, coords="minimal", decode_times=True)
+    dat = dat[var]
+    try: 
+        timebndavg = np.array(dat.time_bnds, 
+                     dtype='datetime64[s]').view('i8').mean(axis=1).astype('datetime64[s]')
+    except:
+        timebndavg = np.array(dat.time_bounds,
+                     dtype='datetime64[s]').view('i8').mean(axis=1).astype('datetime64[s]')
+   
+    dat['time'] = timebndavg
+    dat = dat.sel(time=slice(datestart, dateend))
+
+    return dat
+
+
+
+def read_sfc_cesm(filepath, datestart, dateend):
     """Read in a time slice of a surface field from datestart to dateend.
     Adapted for CESM's wierd calendar.  Setting the time axis as the average 
     of time_bnds
@@ -16,8 +37,7 @@ def read_sfc_cesm(filepath, datestart, dateend, var="minimal"):
         dateend (string) = end date for time slice
     """
     
-    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", decode_times = True,
-                           data_vars=var)
+    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", decode_times = True)
     try:
         dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
     except: pass
