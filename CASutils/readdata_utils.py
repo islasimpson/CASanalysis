@@ -6,7 +6,7 @@ import numpy as np
 from pandas import Timedelta as timedelta
 import sys
 
-def read_cesm_h0(filepath, datestart, dateend, var):
+def read_cesm_h0(fpath, datestart, dateend, var):
     """Read in a variable from CESM history files.  Adapted for 
     CESM's wierd calendar.  Setting the time axis as the average of time_bnds
     """
