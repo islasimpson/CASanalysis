@@ -4,6 +4,7 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 from pandas import Timedelta as timedelta
+import sys
 
 def read_sfc_cesm(filepath, datestart, dateend):
     """Read in a time slice of a surface field from datestart to dateend.
@@ -21,9 +22,19 @@ def read_sfc_cesm(filepath, datestart, dateend):
     except: pass
 
     # setting the time axis as the verage of time bounds.
-    timebndavg = np.array(dat.time_bnds, dtype='datetime64[s]').view('i8').mean(axis=1).astype('datetime64[s]')
-    dat['time'] = timebndavg
-    dat = dat.sel(time=slice(datestart, dateend))
+    try:
+        try:
+            timebndavg = np.array(dat.time_bnds, 
+                     dtype='datetime64[s]').view('i8').mean(axis=1).astype('datetime64[s]')
+        except:
+            timebndavg = np.array(dat.time_bounds,
+                     dtype='datetime64[s]').view('i8').mean(axis=1).astype('datetime64[s]')
+
+        dat['time'] = timebndavg
+        dat = dat.sel(time=slice(datestart, dateend))
+    except:
+        print("warning, you're reading CESM data but there's no time_bnds")
+        print("make sure you're reading in what you're expecting to")
 
     return dat
 
