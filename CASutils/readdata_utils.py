@@ -6,7 +6,7 @@ import numpy as np
 from pandas import Timedelta as timedelta
 import sys
 
-def read_sfc_cesm(filepath, datestart, dateend):
+def read_sfc_cesm(filepath, datestart, dateend, var="minimal"):
     """Read in a time slice of a surface field from datestart to dateend.
     Adapted for CESM's wierd calendar.  Setting the time axis as the average 
     of time_bnds
@@ -16,7 +16,8 @@ def read_sfc_cesm(filepath, datestart, dateend):
         dateend (string) = end date for time slice
     """
     
-    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", decode_times = True)
+    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", decode_times = True,
+                           data_vars=var)
     try:
         dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
     except: pass
