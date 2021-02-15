@@ -34,17 +34,19 @@ def calc_season_nharm(darray, nharms, dimtime=0):
         numnans = [np.count_nonzero(np.isnan(darray_np[:,i])) for i in range(0,darray_np.shape[1],1)]
         nanels = np.where(np.array(numnans) > 0)
 
+        print("numnans=",numnans)
+
         # if nan's exist, del with them by linear interpolation
         if np.any(nanels):
             print("you got nans")
             i = np.arange(ntime)
             for j in np.array(nanels[0]):
-                # check if there are values that are not Nan's
-                if (~np.isnan(darray_np[:,j]).any()):
+                 if (np.isfinite(darray_np[:,j]).any()):
                     mask = np.isfinite(darray_np[:,j])
                     darray_np[:,j] = np.interp(i,i[mask],darray_np[mask,j])
 
     else: # doing this differently for a 1D array
+        i = np.arange(ntime) 
         nanels = np.count_nonzero(np.isnan(darray_np))
         if (nanels > 0):
             mask = np.isfinite(darray_np[:])
