@@ -27,16 +27,21 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
 
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
-    clevs = np.arange(cmin, cmax+ci, ci)
+    clevs = ci * np.arange(cmin/ci, (cmax+ci)/ci, 1)
 
     if (cmap == "blue2red"):
         mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
 
     clevplot=clevs
     if (posneg == "pos"):
         clevplot = clevs[clevs >= 0]
     if (posneg == "neg"):
         clevplot = clevs[clevs <= 0]
+
+    print(clevs)
 
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
