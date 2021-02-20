@@ -41,8 +41,6 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
     if (posneg == "neg"):
         clevplot = clevs[clevs <= 0]
 
-    print(clevs)
-
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
     norm = mpl.colors.Normalize(vmin=cmin, vmax=cmax)
