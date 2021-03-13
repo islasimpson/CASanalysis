@@ -69,3 +69,27 @@ def oplotlinetime_j2j(ax, data, linecolor=None):
         ax.plot(np.arange(0,365,1),dataplot, linewidth=2)
  
     return ax
+
+def oplotrange_j2j(ax, minline, maxline, color=None):
+    """overplot a range on a plot already created using plotlinetime_j2j"""
+    july1 = 181
+    minplot = np.zeros([minline.size])
+    maxplot = np.zeros([maxline.size])
+    minplot[0:365-july1] = minline[july1:365]
+    minplot[365-july1:365] = minline[0:july1]
+    maxplot[0:365-july1] = maxline[july1:365]
+    maxplot[365-july1:365] = maxline[0:july1]
+
+    if (color):
+        ax.fill_between(np.arange(0,365,1), minplot, maxplot, color=color, alpha=0.5)
+    else:
+        ax.fill_between(np.arange(0,365,1), minplot, maxplot, color='salmon', alpha=0.5)
+
+    return ax
+
+
+
+
+
+
+ 
