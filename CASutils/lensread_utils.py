@@ -46,3 +46,63 @@ def lens2memnamegen(nmems):
 
  
     return memstr
+
+def lens2groups():
+    """Generate the member names for LENS 2 simulations an output them in groups
+    that correspond to the initialization type"""
+
+    memmacro=[]
+    for imem in range(0,10,1):
+        memstr1=str(1000+imem*20+1)
+        memstr2=str(imem+1).zfill(3)
+        memmacro.append(memstr1+'.'+memstr2)
+
+    memmicro1=[]
+    for imem in range(0,20,1):
+        memstr1=str(1231)
+        memstr2=str(imem+1).zfill(3)
+        memmicro1.append(memstr1+'.'+memstr2)
+
+    memmicro2=[]
+    for imem in range(0,20,1):
+        memstr1=str(1251)
+        memstr2=str(imem+1).zfill(3)
+        memmicro2.append(memstr1+'.'+memstr2)
+
+    memmicro3=[]
+    for imem in range(0,20,1):
+        memstr1=str(1281)
+        memstr2=str(imem+1).zfill(3)
+        memmicro3.append(memstr1+'.'+memstr2)
+
+    memmicro4=[]
+    for imem in range(0,19,1):
+        memstr1=str(1301)
+        memstr2=str(imem+1).zfill(3)
+        memmicro4.append(memstr1+'.'+memstr2)
+
+    return memmacro,memmicro1,memmicro2,memmicro3,memmicro4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
