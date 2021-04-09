@@ -25,3 +25,4 @@ Located in ./examples
 * **grabera5zmfluxes.ipynb** = computing daily zonal mean fluxes using full column U, V, T and OMEGA for ERA5 from the CISL RDA.
 * **grabera5strd.ipynb** = computing daily averaged radiative fluxes from ERA5 on the CAM grid i.e., this one deals with ERA5 forecast fields.
 * **fluxnetread_allstations.ipynb** = reading in fluxnet data. Retaining stations over a specified longitude latitude range and with a specified record length. Removing Feb 29th and outputting to netcdf.
+* **outputera5deseas.ipynb** = reading in ERA5 daily data, removing leap years, deseasonalizing by removing harmonics from the seasonal cycle and then the seasonal mean
