@@ -3,6 +3,8 @@ import xarray as xr
 import numpy as np
 from datetime import timedelta, datetime
 import pandas as pd
+from math import nan
+import sys
 
 dpm = {'noleap': [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
        '365_day': [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
@@ -53,21 +55,27 @@ def get_days_per_mon(time, calendar='standard'):
     return month_length
 
 
-def season_mean(ds, var, season = "all", cal = "none"):
+def season_mean(ds, var=None, season = "all", cal = "none"):
     """ calculate climatological mean by season
     Args: ds (xarray.Dataset): dataset
           var (str): variable to use
           season (str): "all", 'DJF', "MAM", "JJA", "SON"
           cal (str): "none"(default) or calendar used for weighting months by number of days
     """
+
+    try:
+        ds = ds[var]
+    except:
+        pass
+
     ## no weighting of months: 
     if cal == "none":
         if season == "all":
             ## calculate mean for all season
-            smean = ds[var].groupby('time.season').mean('time')
+            smean = ds.groupby('time.season').mean('time')
         else :
             ## calculate mean for specified season
-            smean = ds[var].where(ds['time.season'] == season).mean('time')
+            smean = ds.where(ds['time.season'] == season).mean('time')
 
         return smean
     ## weighted months
@@ -81,42 +89,47 @@ def season_mean(ds, var, season = "all", cal = "none"):
 
         if season == "all":
             ## calculate weighted mean for all season
-            smean = (ds[var] * weights).groupby('time.season').mean('time')
+            smean = (ds * weights).groupby('time.season').mean('time')
         else :
             ## calculate weighted mean for specified season
-            smean = (ds[var] * weights).where(ds['time.season'] == season).mean('time')
+            smean = (ds * weights).where(ds['time.season'] == season).mean('time')
 
         return smean
 
-def season_ts(ds, var, season):
+def season_ts(ds, season, var=None):
     """ calculate timeseries of seasonal averages
     Args: ds (xarray.Dataset): dataset
           var (str): variable to calculate 
           season (str): 'DJF', 'MAM', 'JJA', 'SON'
     """
-    ## set months outside of season to nan
-    ds_season = ds.where(ds['time.season'] == season)
 
-    # calculate 3month rolling mean (only middle months of season will have non-nan values)
-    ds_season = ds_season[var].rolling(min_periods=3, center=True, time=3).mean().dropna("time", how='all')
+    if (season == 'JAS'):
+        ds_season = ds.where(
+        (ds['time.month'] == 7) | (ds['time.month'] == 8) | (ds['time.month'] == 9))
 
-# IRS - this was the old way.  I think the above is more efficient (just using dropna)
-#    # reduce to one value per year
-#    ds_season = ds_season.groupby('time.year').mean('time')
-#
-#    # remove years that are nan at all grid points
-#    # to get rid of seasons that overlap with the start
-#    # or end of the record
-#
-#    for iyear in ds_season['year'] :
-#        if (np.isnan(ds_season.sel(year = iyear)).all().values) :
-#             ds_season = ds_season.drop_sel( year = [iyear] )
-#
+        if (var):
+            ds_season = ds_season[var].rolling(min_periods=3, center=True, time=3).mean().dropna("time", how='all')
+        else:
+            ds_season = ds_season.rolling(min_periods=3, center=True, time=3).mean().dropna("time", how="all")
+
+    else:
+        ## set months outside of season to nan
+        ds_season = ds.where(ds['time.season'] == season)
+
+        # calculate 3month rolling mean (only middle months of season will have non-nan values)
+        if (var):
+            ds_season = ds_season[var].rolling(min_periods=3, center=True, time=3).mean().dropna("time", how='all')
+        else:
+            ds_season = ds_season.rolling(min_periods=3, center=True, time=3).mean().dropna("time", how="all")
+
     return ds_season
 
 def group_season_daily(ds,  season):
     """ Group daily data in to seasons 
     """
+
+    # change nans to something else so they don't also get dropped in the seasonal grouping
+    ds = ds.where(~np.isnan(ds),-999)
 
     #move the time axis to the first 
     if (ds.dims[0] != 'time'):
@@ -144,6 +157,8 @@ def group_season_daily(ds,  season):
     ds_season = ds.where(ds['time.season'] == season).dropna("time", how="all")
     nyears = ds_season.time.size/dpseas[season] 
 
+    print("nyears="+str(nyears))
+
     # get coords for output
     dims = ds.dims
     dimout=["year", "mon"]
@@ -159,17 +174,22 @@ def group_season_daily(ds,  season):
         for i in ds_season.shape[1::]:
             outdims.append(i)
         # reshape array, convert to xarray and assign coords  
+
+        ds_season = ds_season.where(ds_season != -999., nan)
+
+
         datout = np.reshape(np.array(ds_season), outdims)
         datout = xr.DataArray(datout, coords = outcoords)
     else:
         print("You don't seem to have the right number of days to have an integer number of "+season+" seasons")
-        print("ndays = "+ds_season.time.size)
+        print("ndays = "+str(ds_season.time.size))
         sys.exit()
 
-
-
-
     return datout 
+
+
+
+
 
 def fracofyear2date(time, caltype='standard'):
     """Convert a time series that is in terms of fractions of a year
