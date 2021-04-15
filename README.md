@@ -26,3 +26,4 @@ Located in ./examples
 * **grabera5strd.ipynb** = computing daily averaged radiative fluxes from ERA5 on the CAM grid i.e., this one deals with ERA5 forecast fields.
 * **fluxnetread_allstations.ipynb** = reading in fluxnet data. Retaining stations over a specified longitude latitude range and with a specified record length. Removing Feb 29th and outputting to netcdf.
 * **outputera5deseas.ipynb** = reading in ERA5 daily data, removing leap years, deseasonalizing by removing harmonics from the seasonal cycle and then the seasonal mean
+* **plotvpd_cmip6.ipynb** = an example using lots of plotting techniques: jointpdfs, different colored points etc.  Shows saturation vapor pressure versus actual vapor pressure over the US southwest for CMIP6 models and ERA5.
