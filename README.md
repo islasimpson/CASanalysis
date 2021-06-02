@@ -27,4 +27,4 @@ Located in ./examples
 * **fluxnetread_allstations.ipynb** = reading in fluxnet data. Retaining stations over a specified longitude latitude range and with a specified record length. Removing Feb 29th and outputting to netcdf.
 * **outputera5deseas.ipynb** = reading in ERA5 daily data, removing leap years, deseasonalizing by removing harmonics from the seasonal cycle and then the seasonal mean
 * **plotvpd_cmip6.ipynb** = an example using lots of plotting techniques: jointpdfs, different colored points etc.  Shows saturation vapor pressure versus actual vapor pressure over the US southwest for CMIP6 models and ERA5.
-* **GEOHEAT_jlats.ipynb = an example reading in some zonal wind data, calculating the DJF zonal mean and the location and speed of the jet maxima in each hemisphere.
+* **GEOHEAT_jlats.ipynb** = an example reading in some zonal wind data, calculating the DJF zonal mean and the location and speed of the jet maxima in each hemisphere.
