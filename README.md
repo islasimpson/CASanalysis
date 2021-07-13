@@ -29,3 +29,4 @@ Located in ./examples
 * **plotvpd_cmip6.ipynb** = an example using lots of plotting techniques: jointpdfs, different colored points etc.  Shows saturation vapor pressure versus actual vapor pressure over the US southwest for CMIP6 models and ERA5.
 * **GEOHEAT_jlats.ipynb** = an example reading in some zonal wind data, calculating the DJF zonal mean and the location and speed of the jet maxima in each hemisphere.
 * **output_q_uq_vq_monthly.ipynb** = calculating moisture fluxes from ERA5 on cheyenne
+* **qfluxconv_example.ipynb** = calculating the vertically integrated moisture flux convergence
