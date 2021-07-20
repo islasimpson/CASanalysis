@@ -3,7 +3,7 @@ from matplotlib.colors import ListedColormap ## used to create custom colormaps
 import matplotlib.colors as mcolors
 import numpy as np
 
-def blue2red_cmap(n):
+def blue2red_cmap(n, nowhite = False):
     """ combine two existing color maps to create a diverging color map with white in the middle
     n = the number of contour intervals
     """
@@ -18,6 +18,9 @@ def blue2red_cmap(n):
         nneg = (n-1)/2
         npos = (n-1)/2
 
+    if (nowhite):
+        nwhite=0
+
     colors1 = plt.cm.Blues_r(np.linspace(0,1, int(nneg)))
     colors2 = plt.cm.YlOrRd(np.linspace(0,1, int(npos)))
     colorsw = np.ones((nwhite,4))
@@ -27,7 +30,7 @@ def blue2red_cmap(n):
 
     return mymap 
 
-def precip_cmap(n):
+def precip_cmap(n, nowhite=False):
     """ combine two existing color maps to create a diverging color map with white in the middle.
     browns for negative, blues for positive
     n = the number of contour intervals
@@ -41,6 +44,10 @@ def precip_cmap(n):
         nwhite=2
         nneg = (n-1)/2
         npos = (n-1)/2
+
+    if (nowhite):
+        nwhite=0
+
 
     colors1 = plt.cm.YlOrBr_r(np.linspace(0,1, int(nneg)))
     colors2 = plt.cm.GnBu(np.linspace(0,1, int(npos)))
