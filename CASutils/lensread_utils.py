@@ -25,7 +25,7 @@ def lens2memnamegen(nmems):
             memstr.append(memstr1+'.'+memstr2)
        
         if ((imem >= 10) and (imem < 20)):
-            memstr1=str(1000+imem*10+1)
+            memstr1=str(1000+(imem-10)*20+10+1)
             memstr2=str(imem+1-10).zfill(3)
             memstr.append(memstr1+'.'+memstr2)
  
