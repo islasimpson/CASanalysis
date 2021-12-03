@@ -1,6 +1,232 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def plotlinetime_j2d_monthly(fig, data, x1, x2, y1, y2, titlestr, yrange=None, 
+    yticks=None, yticklabels=None, ytitle=None, linecolor=None, points=True, label=None, linestyle='solid'):
+    """ plot a line plot using monthly data from Jan to Dec
+        Input: fig = your figure 
+           data = a 365 element array containing data to be plotted
+           x1 = location of left edge of plot
+           x2 = location of right edge of plot
+           y1 = location of bottom edge of plot
+           y2 = location of top edge of plot
+           titlestr = plot title
+           yrange = optional range for y axis
+           yticks = optional ticks for y axis
+           yticklabels = optional tick labels for y axis
+           ytitle= optional title for y axis
+           linecolor = optional color of line
+    """
+
+    ax = fig.add_axes([x1,y1,x2-x1,y2-y1])
+ 
+    monticks = np.arange(0,12,1)
+    monticks2 = np.arange(0,12,1)+0.5
+    if (yrange):
+        ax.set_ylim(yrange)
+
+    if (yticks):
+        ax.set_yticks(yticks)
+
+    if (yticklabels):
+        ax.set_yticklabels(yticklabels, fontsize=14)
+
+    if (ytitle):
+        ax.set_ylabel(ytitle, fontsize=14)
+
+    ax.set_xlim([0,12])
+    ax.tick_params(which='minor', length=0)
+    ax.set_xticks(monticks)
+    ax.set_xticklabels([])
+    ax.set_xticks(monticks2, minor=True)
+    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True, fontsize=14)
+    ax.set_title(titlestr, fontsize=16)
+
+    if linecolor is not None:
+            ax.plot(np.arange(0,12,1)+0.5,data,color=linecolor, linewidth=2, label=label, linestyle=linestyle)
+            if (points == True):
+                ax.plot(np.arange(0,12,1)+0.5,data,"o",markerfacecolor=linecolor, 
+                markeredgecolor="black", markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,data, linewidth=2, label=label, linestyle=linestyle)
+        if (points == True):
+            ax.plot(np.arange(0,12,1)+0.5,data,"o",markeredgecolor="black", 
+            markersize=10, markeredgewidth=2)
+
+    return ax
+
+def oplotlinetime_j2d_monthly(ax, data, linecolor=None, points=True, label=None):
+    """ overplot a line on a January - December monthly line plot"""
+
+    if (linecolor[0]):
+        ax.plot(np.arange(0,12,1)+0.5,data,color=linecolor, linewidth=2, label=label)
+        if (points == True):
+            ax.plot(np.arange(0,12,1)+0.5,data,"o",markerfacecolor=linecolor, 
+             markeredgecolor="black", markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,data, linewidth=2, label=label)
+        if (points == True):
+            ax.plot(np.arange(0,12,1)+0.5,data,"o",markeredgecolor="black", 
+            markersize=10, markeredgewidth=2)
+
+    return ax
+
+
+def plotlinetime_j2d_monthly_cdf(fig, data, x1, x2, y1, y2, titlestr, yrange=None, 
+    yticks=None, yticklabels=None, ytitle=None, linecolor=None):
+    """
+        Input: fig = your figure 
+           data = a 365 element array containing data to be plotted
+           x1 = location of left edge of plot
+           x2 = location of right edge of plot
+           y1 = location of bottom edge of plot
+           y2 = location of top edge of plot
+           titlestr = plot title
+           yrange = optional range for y axis
+           yticks = optional ticks for y axis
+           yticklabels = optional tick labels for y axis
+           ytitle= optional title for y axis
+           linecolor = optional color of line
+    """
+
+    dataplot = np.zeros([12])
+    for i in np.arange(0,12,1):
+        dataplot[i] = np.sum(data[0:i+1])
+
+    ax = fig.add_axes([x1,y1,x2-x1,y2-y1])
+ 
+    monticks = np.arange(0,12,1)
+    monticks2 = np.arange(0,12,1)+0.5
+    if (yrange):
+        ax.set_ylim(yrange)
+
+    if (yticks):
+        ax.set_yticks(yticks)
+
+    if (yticklabels):
+        ax.set_yticklabels(yticklabels, fontsize=14)
+
+    if (ytitle):
+        ax.set_ylabel(ytitle, fontsize=14)
+
+    ax.set_xlim([0,12])
+    ax.tick_params(which='minor', length=0)
+    ax.set_xticks(monticks)
+    ax.set_xticklabels([])
+    ax.set_xticks(monticks2, minor=True)
+    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True, fontsize=14)
+    ax.set_title(titlestr, fontsize=16)
+
+    if (linecolor[0]):
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,color=linecolor, linewidth=2)
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markerfacecolor=linecolor, markeredgecolor=linecolor, markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,dataplot, linewidth=2)
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markeredgecolor="black", markersize=10, markeredgewidth=2)
+
+    return ax
+
+
+def plotlinetime_j2d_monthly_accummean(fig, data, x1, x2, y1, y2, titlestr, yrange=None, 
+    yticks=None, yticklabels=None, ytitle=None, linecolor=None, points=True):
+    """
+        Input: fig = your figure 
+           data = a 365 element array containing data to be plotted
+           x1 = location of left edge of plot
+           x2 = location of right edge of plot
+           y1 = location of bottom edge of plot
+           y2 = location of top edge of plot
+           titlestr = plot title
+           yrange = optional range for y axis
+           yticks = optional ticks for y axis
+           yticklabels = optional tick labels for y axis
+           ytitle= optional title for y axis
+           linecolor = optional color of line
+    """
+
+    dataplot = np.zeros([12])
+    for i in np.arange(0,12,1):
+        dataplot[i] = np.mean(data[0:i+1])
+
+    ax = fig.add_axes([x1,y1,x2-x1,y2-y1])
+ 
+    monticks = np.arange(0,12,1)
+    monticks2 = np.arange(0,12,1)+0.5
+    if (yrange):
+        ax.set_ylim(yrange)
+
+    if (yticks):
+        ax.set_yticks(yticks)
+
+    if (yticklabels):
+        ax.set_yticklabels(yticklabels, fontsize=14)
+
+    if (ytitle):
+        ax.set_ylabel(ytitle, fontsize=14)
+
+    ax.set_xlim([0,12])
+    ax.tick_params(which='minor', length=0)
+    ax.set_xticks(monticks)
+    ax.set_xticklabels([])
+    ax.set_xticks(monticks2, minor=True)
+    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True, fontsize=14)
+    ax.set_title(titlestr, fontsize=16)
+
+    if (linecolor[0]):
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,color=linecolor, linewidth=2)
+        if (points):
+            ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markerfacecolor=linecolor, 
+              markeredgecolor=linecolor, markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,dataplot, linewidth=2)
+        if (points):
+            ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markeredgecolor="black", markersize=10, 
+             markeredgewidth=2)
+
+    return ax
+
+
+
+
+def oplotlinetime_j2d_cdf(ax, data, linecolor=None):
+    """ overplot a line on a January - December monthly line plot"""
+
+    dataplot = np.zeros([12])
+    for i in np.arange(0,12,1):
+        dataplot[i] = np.sum(data[0:i+1])
+
+    if (linecolor):
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,color=linecolor, linewidth=2)
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markerfacecolor=linecolor, markeredgecolor=linecolor, markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,dataplot, linewidth=2)
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markeredgecolor="black", markersize=10, markeredgewidth=2)
+
+    return ax
+
+def oplotlinetime_j2d_accummean(ax, data, linecolor=None, points=True):
+    """ overplot a line on a January - December monthly line plot"""
+
+    dataplot = np.zeros([12])
+    for i in np.arange(0,12,1):
+        dataplot[i] = np.mean(data[0:i+1])
+
+    if (linecolor[0]):
+        ax.plot(np.arange(0,12,1)+0.5,dataplot,color=linecolor, linewidth=2)
+        if (points):
+            ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markerfacecolor=linecolor, 
+             markeredgecolor=linecolor, markersize=10)
+    else:
+        ax.plot(np.arange(0,12,1)+0.5,dataplot, linewidth=2)
+        if (points):
+            ax.plot(np.arange(0,12,1)+0.5,dataplot,"o",markeredgecolor="black", 
+            markersize=10, markeredgewidth=2)
+
+    return ax
+
+
+
+
 def plotlinetime_j2j(fig, data, x1, x2, y1, y2, titlestr, yrange=None, yticks=None, yticklabels=None, ytitle=None, linecolor=None):
     """ plot a line plot.  Takes input from jan 1st to dec 31st and plots the line plot from 
     July to June.

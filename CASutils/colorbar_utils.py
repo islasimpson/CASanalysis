@@ -1,10 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from CASutils import colormap_utils as mycolors
+import importlib
+importlib.reload(mycolors)
 import numpy as np
 
 def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2, 
-   cmap='blue2red', orient='horizontal', posneg='both', ticks=None, fsize=14):
+   cmap='blue2red', orient='horizontal', posneg='both', ticks=None, fsize=14, nowhite=False,
+   contourlines=False, contourlinescale=1):
     """plot a color bar
        Input:
            fig = the figure identified
@@ -23,24 +26,25 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
                     if "net", only the negative side is plotted
            ticks = user specified ticklabels
            fsize = user specified font size
+           contourlines = used to overplot contour lines
+           contourlinescale = scale factor for contour lines to be overplotted
     """
 
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
-    clevs = ci * np.arange(cmin/ci, (cmax+ci)/ci, 1)
+    clevs = ci * np.arange(cmin/ci, (cmax+ci)/ci, 1) 
 
     if (cmap == "blue2red"):
-        mymap = mycolors.blue2red_cmap(nlevs)
+        mymap = mycolors.blue2red_cmap(nlevs, nowhite)
 
     if (cmap == "precip"):
-        mymap = mycolors.precip_cmap(nlevs)
+        mymap = mycolors.precip_cmap(nlevs, nowhite)
 
     clevplot=clevs
     if (posneg == "pos"):
         clevplot = clevs[clevs >= 0]
     if (posneg == "neg"):
         clevplot = clevs[clevs <= 0]
-
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
     norm = mpl.colors.Normalize(vmin=cmin, vmax=cmax)
@@ -54,5 +58,17 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
 
     clb.ax.tick_params(labelsize=fsize)
     clb.set_label(titlestr, fontsize=fsize+2)
+
+    if (contourlines):
+        #clevlines = (clevs-ci/2.)*contourlinescale
+        clevlines = clevs*contourlinescale
+        clevlines = clevlines[np.abs(clevlines) > ci/2.]
+        if (orient=='horizontal'):
+            ax.vlines(clevlines[clevlines > 0],-5,5, colors='black', linestyle='solid')
+            ax.vlines(clevlines[clevlines < 0],-5,5, colors='black', linestyle='dashed')
+        if (orient=='vertical'):
+            ax.hlines(clevlines[clevlines > 0],-10,15, colors='black', linestyle='solid')
+            ax.hlines(clevlines[clevlines < 0],-10,15, colors='black', linestyle='dashed')
+
 
     return ax
