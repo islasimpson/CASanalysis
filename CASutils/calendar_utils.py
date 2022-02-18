@@ -69,32 +69,37 @@ def season_mean(ds, var=None, season = "all", cal = "none"):
         pass
 
     ## no weighting of months: 
-    if cal == "none":
-        if season == "all":
-            ## calculate mean for all season
-            smean = ds.groupby('time.season').mean('time')
-        else :
-            ## calculate mean for specified season
-            smean = ds.where(ds['time.season'] == season).mean('time')
 
-        return smean
-    ## weighted months
-    else:
-        ## create array of month_length (number of days in each month)
-        ## assign time coords matching original ds
-        month_length = xr.DataArray(get_days_per_mon(ds.time.to_index(), calendar=cal),
-                                 coords=[ds.time], name='month_length')
-        ## Calculate the weights by grouping by 'time.season'
-        weights = month_length.groupby('time.season') / month_length.groupby('time.season').sum()
+    if (season == 'JJ'):
+        ds = ds.where( (ds['time.month'] == 6) | (ds['time.month'] == 7) )
+        smean = ds.mean('time')
+    else:        
+        if cal == "none":
+            if season == "all":
+                ## calculate mean for all season
+                smean = ds.groupby('time.season').mean('time')
+            else :
+                ## calculate mean for specified season
+                smean = ds.where(ds['time.season'] == season).mean('time')
+    
+            return smean
+        ## weighted months
+        else:
+            ## create array of month_length (number of days in each month)
+            ## assign time coords matching original ds
+            month_length = xr.DataArray(get_days_per_mon(ds.time.to_index(), calendar=cal),
+                                     coords=[ds.time], name='month_length')
+            ## Calculate the weights by grouping by 'time.season'
+            weights = month_length.groupby('time.season') / month_length.groupby('time.season').sum()
+    
+            if season == "all":
+                ## calculate weighted mean for all season
+                smean = (ds * weights).groupby('time.season').mean('time')
+            else :
+                ## calculate weighted mean for specified season
+                smean = (ds * weights).where(ds['time.season'] == season).mean('time')
 
-        if season == "all":
-            ## calculate weighted mean for all season
-            smean = (ds * weights).groupby('time.season').mean('time')
-        else :
-            ## calculate weighted mean for specified season
-            smean = (ds * weights).where(ds['time.season'] == season).mean('time')
-
-        return smean
+    return smean
 
 def season_ts(ds, season, var=None):
     """ calculate timeseries of seasonal averages
@@ -111,7 +116,13 @@ def season_ts(ds, season, var=None):
             ds_season = ds_season[var].rolling(min_periods=3, center=True, time=3).mean().dropna("time", how='all')
         else:
             ds_season = ds_season.rolling(min_periods=3, center=True, time=3).mean().dropna("time", how="all")
-
+    elif (season == 'JJAS'):
+        ds_season = ds.where(
+        (ds['time.month'] == 6) | (ds['time.month'] == 7) | (ds['time.month'] == 8) | (ds['time.month'] ==9))
+        if (var):
+            ds_season = ds_season[var].rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
+        else:
+            ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")    
     else:
         ## set months outside of season to nan
         ds_season = ds.where(ds['time.season'] == season)
