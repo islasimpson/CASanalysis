@@ -52,7 +52,8 @@ def read_sfc_cesm(filepath, datestart, dateend):
         dateend (string) = end date for time slice
     """
     
-    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", compat="override", decode_times = True)
+#    dat = xr.open_mfdataset(filepath, coords="minimal", join="override", compat="override", decode_times = True)
+    dat = xr.open_mfdataset(filepath, coords="minimal", compat="override", decode_times=True)
     try:
         dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
     except: pass
@@ -202,7 +203,7 @@ def read_sfc(filepath, datestart, dateend):
     try:
         dat = \
         xr.open_mfdataset\
-        (filepath, coords="minimal", join="override", decode_times=True, use_cftime=True).\
+        (filepath, coords="minimal", join="override", decode_times=True, use_cftime=True, compat='override').\
         sel(time=slice(datestart, dateend))
         try:
             dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
@@ -210,7 +211,7 @@ def read_sfc(filepath, datestart, dateend):
         except: pass
 
     except:
-        dat = xr.open_mfdataset(filepath, coords="minimal", join="override", decode_times = False)
+        dat = xr.open_mfdataset(filepath, coords="minimal", join="override", compat='override', decode_times = False)
         try:
             dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
         except: pass
@@ -257,7 +258,7 @@ def read_sfc_alltime(filepath):
 
 
 
-def read_zonalmean(filepath, datestart, dateend):
+def read_zonalmean(filepath, datestart, dateend, skipna=True):
     """Read in a time slice from datestart to dateend and calculate the zonal mean.
     Try using datetime64 and if that doesn't work decode times manually.
     Args:
@@ -272,11 +273,11 @@ def read_zonalmean(filepath, datestart, dateend):
                  sel(time=slice(datestart, dateend))
 
         try:
-            datzm=dat.mean(dim="lon")
+            datzm=dat.mean(dim="lon", skipna=True)
         except:
             # deal with problematic coordinate names
             dat=dat.rename({"longitude":"lon", "latitude":"lat"})
-            datzm=dat.mean(dim="lon")
+            datzm=dat.mean(dim="lon", skipna=True)
 
     except:
         print("Something's wierd about the time axis, decoding manually")
@@ -284,11 +285,11 @@ def read_zonalmean(filepath, datestart, dateend):
                    decode_times=False)
     
         try:
-            datzm=dat.mean(dim="lon")
+            datzm=dat.mean(dim="lon", skipna=True)
         except:
             # deal with problematic coordinate names
             dat=dat.rename({"longitude":"lon", "latitude":"lat"})
-            datzm=dat.mean(dim="lon")
+            datzm=dat.mean(dim="lon", skipna=True)
 
         datzm=xr.decode_cf(datzm, use_cftime=True)
         datzm=datzm.sel(time=slice(datestart, dateend))
