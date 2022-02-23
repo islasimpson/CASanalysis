@@ -31,3 +31,4 @@ Located in ./examples
 * **GEOHEAT_jlats.ipynb** = an example reading in some zonal wind data, calculating the DJF zonal mean and the location and speed of the jet maxima in each hemisphere.
 * **output_q_uq_vq_monthly.ipynb** = calculating moisture fluxes from ERA5 on cheyenne
 * **qfluxconv_example.ipynb** = calculating the vertically integrated moisture flux convergence
+* **outputblocking_ERA5.py = doing the Masato et al blocking calculation for ERA5
