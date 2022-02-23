@@ -1,7 +1,7 @@
 import xarray as xr
 import numpy as np
 
-def cosweightlonlat(darray,lon1,lon2,lat1,lat2):
+def cosweightlonlat(darray,lon1,lon2,lat1,lat2, fliplon=True):
     """Calculate the weighted average for an [:,lat,lon] array over the region
     lon1 to lon2, and lat1 to lat2
     """
@@ -11,10 +11,11 @@ def cosweightlonlat(darray,lon1,lon2,lat1,lat2):
         darray = darray.sortby('lat')
 
     # flip longitudes if they start at -180
-    if (darray.lon[0] < 0):
-        print("flipping longitudes")
-        darray.coords['lon'] = (darray.coords['lon'] + 360) % 360
-        darray = darray.sortby(darray.lon)
+    if (fliplon):
+        if (darray.lon[0] < 0):
+            print("flipping longitudes")
+            darray.coords['lon'] = (darray.coords['lon'] + 360) % 360
+            darray = darray.sortby(darray.lon)
 
 
     region=darray.sel(lon=slice(lon1,lon2),lat=slice(lat1,lat2))
