@@ -6,6 +6,16 @@ import numpy as np
 from pandas import Timedelta as timedelta
 import sys
 
+def readcesmpicontrol(fpath):
+    """Read in the CESM piControl data and fix the time axis"""
+    dat = xr.open_mfdataset(fpath, coords='minimal', decode_times='False')
+    timebnds = dat.time_bnds
+    diff = np.array(timebnds.isel(nbnd=1)) - np.array(timebnds.isel(nbnd=0))
+    diff = diff/2.
+    newtime = np.array(timebnds.isel(nbnd=0)) + diff
+    dat['time'] = newtime
+    return dat
+
 def fixcesmtime(dat,timebndsvar='time_bnds'):
     """ Fix the CESM timestamp using the average of time_bnds"""
 
@@ -211,7 +221,8 @@ def read_sfc(filepath, datestart, dateend):
         except: pass
 
     except:
-        dat = xr.open_mfdataset(filepath, coords="minimal", join="override", compat='override', decode_times = False)
+        #dat = xr.open_mfdataset(filepath, coords="minimal", join="override", compat='override', decode_times = False)
+        dat = xr.open_mfdataset(filepath, combine='nested', concat_dim="time", coords="minimal", join="override", compat="override", decode_times = False)
         try:
             dat=dat.rename({"longitude":"lon", "latitude":"lat"}) #problematic coord names
         except: pass
