@@ -40,6 +40,9 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
     if (cmap == "precip"):
         mymap = mycolors.precip_cmap(nlevs, nowhite)
 
+    if (cmap == 'red2blue'):
+        mymap = mycolors.red2blue_cmap(nlevs, nowhite)
+
     clevplot=clevs
     if (posneg == "pos"):
         clevplot = clevs[clevs >= 0]
