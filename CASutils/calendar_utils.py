@@ -123,6 +123,13 @@ def season_ts(ds, season, var=None):
             ds_season = ds_season[var].rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
         else:
             ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")    
+    elif (season == 'MJJA'):
+        ds_season = ds.where(
+        (ds['time.month'] == 5) | (ds['time.month'] == 6) | (ds['time.month'] == 7) | (ds['time.month'] ==8))
+        if (var):
+            ds_season = ds_season[var].rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
+        else:
+            ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
     else:
         ## set months outside of season to nan
         ds_season = ds.where(ds['time.season'] == season)
@@ -219,4 +226,12 @@ def fracofyear2date(time, caltype='standard'):
     return date 
 
 
+def YYYYMM2date(time, caltype='standard'):
+    """ Convert a date of the form YYYYMM to a datetime64 object """
+    date = pd.to_datetime(time, format='%Y%m')
+    return date
+
+def YYYYMMDD2date(date, caltype='standard'):
+    time = pd.to_datetime(date, format='%Y%m%d')
+    return time
 
