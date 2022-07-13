@@ -11,6 +11,7 @@ import statsmodels.api as sm
 # tls = total least squares regresion
 # bhm = using a Bayesian Hierarchical Model.
 
+
 def linfit_lonlat(darray,dimname):
     """Calculate the linear trend coefficients for an [:, lat, lon] array"""
     darray_2d=darray.stack(allpoints=['lat','lon'])
@@ -286,7 +287,62 @@ def compute_slope(y):
     x = np.arange(len(y))
     return np.polyfit(x, y, 1)[0]
 
+def lineardetrend(dat, dim):
+    """ 
+    function to detrend along a dimension of an xarray dataarray
+    """
 
+    params = dat.polyfit(dim=dim, deg=1)
+    fit = xr.polyval(dat[dim], params.polyfit_coefficients)
+    dat = dat-fit
+    return dat 
+
+#def linfit_compute_slope(x,y, axis='time'):
+#    """Calculate a weighted least squares linear fit between arrays x and y
+#    Input: x (the predictor)
+#           y (the predictand)
+#           sigma (optional) the standard deviation of the y values
+#    Output: a and b and the residuals
+#    """
+#
+#    x = x.transpose(axis,...)
+#    y = y.transpose(axis,...)
+#
+#    dimsy = y.dims
+#    dimsx = x.dims
+#
+#    dimsout = []
+#    coordsout = []
+#    for icoord in range(1,len(dimsy)):
+#        dimsout.append(y[dimsy[icoord]].size)
+#        coordsout.append( (dimsy[icoord], y[dimsy[icoord]]) )
+#
+#    if (len(dimsx) > 1):
+#        otherxdims=[]
+#        for icoord in range(1,len(dimsx)):
+#            otherxdims.append(x[dimsx[icoord]].size)
+#
+#    x = x.reshape([len(
+#
+#
+#
+#    print(otherxdims)
+#    print(dimsout)
+
+#    print(x)
+#    print(y)
+
+#    if sigma is not None:
+#        w = 1./(sigma)
+#        coefs = np.polyfit(x,y,1,w=w)
+#    else:
+#        coefs = np.polyfit(x,y,1)
+#
+#   
+#
+#    a = coefs[1]
+#    b = coefs[0]
+#    return a, b
 
 
 
