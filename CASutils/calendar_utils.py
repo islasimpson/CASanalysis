@@ -183,7 +183,7 @@ def group_season_daily(ds,  season):
     outcoords = [('year', ybeg + np.arange(nyears)), ('day', np.arange(dpseas[season]))]
     for icoord in range(1,len(dims)):
         dimout.append(dims[icoord])
-        outcoords.append( (dims[icoord], ds[dims[icoord]]))
+        outcoords.append( (dims[icoord], np.array(ds[dims[icoord]])))
 
     # check you have an integer number of years
     if (nyears == int(nyears)):
