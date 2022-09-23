@@ -13,13 +13,14 @@ def calcAMV(sst):
     amv = natl/glob
     return amv
 
-def calcAMOC(MOC):
+def calcAMOC(MOC, lat=26.5):
     """ Calculate the AMOC as measured by the maximum stream function
     in the Atlantic sector below 500m depth at 26.5 degrees North.
-    This requires the input variable MOC from the ocean component
+    This requires the input variable MOC from the ocean component.
+    If another latitude is required specify lat
     """
 
-    amoc = dat.MOC.sum('moc_comp').sel(lat_aux_grid=26.5,method='nearest').\
+    amoc = MOC.sum('moc_comp').sel(lat_aux_grid=lat,method='nearest').\
            isel(transport_reg=1).sel(moc_z=slice(50000.,None)).max('moc_z')
 
     return amoc

@@ -206,7 +206,7 @@ def contourmap_centrallon_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
 
 
 def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, contourlines=None, contourlinescale=1):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, stipplesignif=False, contourlines=None, contourlinescale=1):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -258,7 +258,14 @@ def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
     if ( signifdat is not None ):
         lonsignif = signifdat.lon
         signifdat, lonsignif = add_cyclic_point( signifdat, coord=lonsignif)
-        ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray', transform = ccrs.PlateCarree())
+        if (stipplesignif):
+            density=3
+            ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='none', 
+               hatches=[density*'.',density*'.', density*','],
+               transform = ccrs.PlateCarree())
+        else:
+            ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='lightgray', 
+               transform = ccrs.PlateCarree())
 
     ax.set_global()
 
@@ -381,7 +388,7 @@ def contourmap_bothcontinents_northstereo_pos(fig, dat, lon, lat, ci, cmin, cmax
 
 
 def contourmap_bothcontinents_southstereo_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, maskocean=False):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, maskocean=False, latlim=-40):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -411,9 +418,9 @@ def contourmap_bothcontinents_southstereo_pos(fig, dat, lon, lat, ci, cmin, cmax
         mymap = mycolors.precip_cmap(nlevs)
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.SouthPolarStereo())
-    ax.set_extent([-180,180,-90,-40], ccrs.PlateCarree())
+    ax.set_extent([-180,180,-90,latlim], ccrs.PlateCarree())
     ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.COASTLINE, zorder=100)
 
     ax.set_title(titlestr, fontsize=fontsize)
 

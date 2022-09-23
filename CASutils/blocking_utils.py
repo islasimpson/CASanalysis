@@ -59,6 +59,56 @@ def getseason_pm5(dat, ystart, yend, season):
     return datout   
 
 
+def getseason_pm5_360day(dat, ystart, yend, season):
+    """ Pick out seasons +/- 5 days """
+    dpm = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+    mondaystr = dat.indexes['time'].strftime('%Y-%m-%d')
+    nyears = yend - ystart + 1
+    
+    if (season == 'DJF'):
+        ndays = dpm[11]+dpm[0]+dpm[1]+10
+        indices = np.zeros([(nyears-1)*ndays]).astype(int)
+    if (season == 'MAM'):
+        ndays = dpm[2]+dpm[3]+dpm[4]+10
+        indices = np.zeros([(nyears)*ndays]).astype(int)
+    if (season == 'JJA'):
+        ndays = dpm[5]+dpm[6]+dpm[7]+10
+        indices = np.zeros([(nyears)*ndays]).astype(int)
+    if (season == 'SON'):
+        ndays = dpm[8]+dpm[9]+dpm[10]+10
+        indices = np.zeros([(nyears)*ndays]).astype(int)
+    
+    if (season == 'DJF'):
+        for iyear in np.arange(ystart, yend, 1):
+            index1 = np.argwhere(mondaystr == str(iyear)+'-12-01')[0]-5
+            index2 = np.argwhere(mondaystr == str(iyear+1)+'-02-30')[0]+5+1
+            indices[ (iyear-ystart)*ndays:(iyear-ystart)*ndays+ndays ] = np.arange(index1[0], index2[0],1).astype(int)
+        
+    if (season == 'MAM'):
+        for iyear in np.arange(ystart,yend+1,1):
+            index1 = np.argwhere(mondaystr == str(iyear)+'-03-01')[0]-5
+            index2 = np.argwhere(mondaystr == str(iyear)+'-05-30')[0]+5+1
+            indices[ (iyear-ystart)*ndays:(iyear-ystart)*ndays+ndays ] = np.arange(index1[0], index2[0], 1).astype(int)
+        
+    if (season == 'JJA'):
+        for iyear in np.arange(ystart,yend+1,1):
+            index1 = np.argwhere(mondaystr == str(iyear)+'-06-01')[0]-5
+            index2 = np.argwhere(mondaystr == str(iyear)+'-08-30')[0]+5+1
+            indices[ (iyear - ystart)*ndays:(iyear-ystart)*ndays + ndays ] = np.arange(index1[0], index2[0], 1).astype(int)
+        
+    if (season == 'SON'):
+        for iyear in np.arange(ystart,yend+1,1):
+            index1 = np.argwhere(mondaystr == str(iyear)+'-09-01')[0]-5
+            index2 = np.argwhere(mondaystr == str(iyear)+'-11-30')[0]+5+1
+            indices[ (iyear - ystart)*ndays:(iyear-ystart)*ndays + ndays ] = np.arange(index1[0], index2[0], 1).astype(int)
+        
+    datout = dat.isel(time = indices)
+    
+    return datout   
+
+
+
+
 def findcontiguous(bday, minlatsearch=40, maxlatsearch=70):
     """Find the local maxima in daily blocking index and grid points that are contiguous to those maxima.
     Input:
@@ -102,7 +152,7 @@ def findcontiguous(bday, minlatsearch=40, maxlatsearch=70):
         indices = btest.argmax(dim=['lat','lon'], keep_attrs = True)
         lonmax = b_cp.lon[indices['lon']]
         latmax = b_cp.lat[indices['lat']]
-            if ( (lonmax >= 60) and (lonmax < (360+60)) ):
+        if ( (lonmax >= 60) and (lonmax < (360+60)) ):
             lonblock[iblock] = lonmax.values ; latblock[iblock] = latmax.values
         else:
             lonblock[iblock] = nan ; latblock[iblock] = nan
@@ -227,7 +277,7 @@ def calcblocking(dat, ystart, yend):
     
     countall = 0 # counter for block numbers
     for iyear in np.arange(ystart, yend+1, 1): # loop over years
-        print('Processing year '+str(iyear))
+        #print('Processing year '+str(iyear))
         byear = b.isel(time=slice(int((iyear-ystart)*ndays), int((iyear-ystart+1)*ndays))) # blocking indices for that year
         
         alreadyblocks = 0 # no blocks have been detected in this season yet

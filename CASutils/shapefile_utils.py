@@ -19,7 +19,7 @@ def maskgen(shpfile, dat4mask, regionname):
     """
 
     # setup of the grid for the mask from dat4mask
-    maskcoords = xr.Dataset({'lat' : (['lat'],dat4mask['lat'])}, {'lon' : (['lon'],dat4mask['lon'])})
+    maskcoords = xr.Dataset({'lat' : (['lat'],dat4mask['lat'].values)}, {'lon' : (['lon'],dat4mask['lon'].values)})
 
     mask = np.zeros([maskcoords.lat.size, maskcoords.lon.size])
 

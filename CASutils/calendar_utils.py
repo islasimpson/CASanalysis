@@ -130,6 +130,13 @@ def season_ts(ds, season, var=None):
             ds_season = ds_season[var].rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
         else:
             ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
+    elif (season == 'DJFM'):
+        ds_season = ds.where(
+        (ds['time.month'] == 12) | (ds['time.month'] == 1) | (ds['time.month'] == 2) | (ds['time.month'] == 3))
+        if (var):
+            ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
+        else:
+            ds_season = ds_season.rolling(min_periods=4, center=True, time=4).mean().dropna("time", how="all")
     else:
         ## set months outside of season to nan
         ds_season = ds.where(ds['time.season'] == season)
@@ -142,7 +149,7 @@ def season_ts(ds, season, var=None):
 
     return ds_season
 
-def group_season_daily(ds,  season):
+def group_season_daily(ds,  season, calendar='standard'):
     """ Group daily data in to seasons 
     """
 
@@ -205,7 +212,15 @@ def group_season_daily(ds,  season):
 
     return datout 
 
+def date2fracofyear(time):
+    year = time.dt.year.values
+    month = time.dt.month.values
+    day = time.dt.day.values
 
+    cal_days = dpm['standard']
+
+    fracofyear = [ year[i] + (np.sum(cal_days[0:month[i]]) + day[i])/365. for i in np.arange(0,len(year),1) ]
+    return fracofyear
 
 
 
@@ -234,4 +249,9 @@ def YYYYMM2date(time, caltype='standard'):
 def YYYYMMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%Y%m%d')
     return time
+
+def MMDD2date(date, caltype='standard'):
+    time = pd.to_datetime(date, format='%m%d')
+    return time
+
 
