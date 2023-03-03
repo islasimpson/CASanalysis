@@ -42,6 +42,16 @@ def linfit_xy(x,y, sigma=None):
     b = coefs[0]
     return a, b
 
+
+def reg_latlon(x,y):
+   y2 = y.stack(z=("lat","lon"))
+   a, b = linfit.linfit_xy(x, y2)
+   a = np.reshape(a, [y.lat.size, y.lon.size])
+   b = np.reshape(b, [y.lat.size, y.lon.size])
+   a_xr = xr.DataArray(a, coords=[y.lat, y.lon], dims=['lat','lon'], name='a')
+   b_xr = xr.DataArray(b, coords=[y.lat, y.lon], dims=['lat','lon'], name='b')
+   return a_xr, b_xr
+
 def multi_ols(x, y, sigma=None):
     """ Calculate a weighted least squares regression with multiple X variables
     Input: x (numpy array of size nobs x npredictors)

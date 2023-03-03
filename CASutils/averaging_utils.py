@@ -38,6 +38,7 @@ def cosweightlat(darray, lat1, lat2):
     region = darray.sel(lat=slice(lat1, lat2))
     weights=np.cos(np.deg2rad(region.lat))
     regionw = region.weighted(weights)
+    print(regionw)
     regionm = regionw.mean("lat")
 
     return regionm

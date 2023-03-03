@@ -253,5 +253,3 @@ def YYYYMMDD2date(date, caltype='standard'):
 def MMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%m%d')
     return time
-
-

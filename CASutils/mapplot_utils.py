@@ -476,7 +476,7 @@ def contourmap_continentsonly_robinson_noborder_pos(fig, dat, lon, lat, ci, cmin
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.Robinson(central_longitude=0))
     ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.COASTLINE, zorder=100)
 
     ax.set_title(titlestr, fontsize=fontsize)
 
@@ -665,6 +665,7 @@ def contourmap_northamerica_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titl
 
     #ax.scatter(lon, lat, c=dat, marker="o", vmin=-170, vmax=170, cmap="RdYlBu_r")
     return ax
+
 
 
 def contourmap_northatlantic_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
@@ -1066,7 +1067,10 @@ def contourmap_southamerica_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlest
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
     ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
+    dat, lon = add_cyclic_point(dat, coord=lon)
+    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
+
+    ax.add_feature(cfeature.COASTLINE, zorder=1000)
     ax.set_extent([-90, -30, -60, 20], crs = ccrs.PlateCarree())
 
     #if (labels):
@@ -1078,9 +1082,6 @@ def contourmap_southamerica_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlest
      #   ax.yformatter = LatitudeFormatter()
 
     ax.set_title(titlestr, fontsize=16)
-
-    dat, lon = add_cyclic_point(dat, coord=lon)
-    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
 
     return ax
 
@@ -1185,55 +1186,55 @@ def contourmap_middleeast_asia_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, t
     #ax.scatter(lon, lat, c=dat, marker="o", vmin=-170, vmax=170, cmap="RdYlBu_r")
     return ax
 
-def contourmap_southamerica_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red"):
-    """ plot a contour map of 2D data dat with coordinates lon and lat
-        Input:
-              fig = the figure identifier
-              dat = the data to be plotted
-              lon = the longitude coordinate
-              lat = the latitude coordinate
-              ci = the contour interval
-              cmin = the minimum of the contour range
-              cmax = the maximum of the contour range
-              titlestr = the title of the map
-              x1 = position of the left edge
-              x2 = position of the right edge
-              y1 = position of the bottom edge
-              y2 = position of the top edge
-              labels = True/False (ticks and  labels are plotted if true) 
-              cmap = color map (only set up for blue2red at the moment)
-    """
-
-    # set up contour levels and color map
-    nlevs = (cmax-cmin)/ci + 1
-    clevs = np.arange(cmin, cmax+ci, ci)
-     
-    if (cmap == "blue2red"):
-        mymap = mycolors.blue2red_cmap(nlevs)
-
-    if (cmap == "precip"):
-        mymap = mycolors.precip_cmap(nlevs)
-
-    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
-    ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
-    ax.set_extent([-85, -30, -62, 20], crs = ccrs.PlateCarree())
-
-    #if (labels):
-     #   ax.set_xticks([-150, -100, -50], crs = ccrs.PlateCarree())
-     #   ax.set_xticklabels(['150W','100W','50W'], fontsize=12)
-     #   ax.set_yticks([20,40,60,80], crs = ccrs.PlateCarree())
-     #   ax.set_yticklabels(['20N','40N','60N','80N'], fontsize=12)
-     #   ax.xformatter = LongitudeFormatter()
-     #   ax.yformatter = LatitudeFormatter()
-
-    ax.set_title(titlestr, fontsize=16)
-
-    dat, lon = add_cyclic_point(dat, coord=lon)
-    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
-
-    return ax
+#def contourmap_southamerica_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
+# x1, x2, y1, y2, labels=True, cmap="blue2red"):
+#    """ plot a contour map of 2D data dat with coordinates lon and lat
+#        Input:
+#              fig = the figure identifier
+#              dat = the data to be plotted
+#              lon = the longitude coordinate
+#              lat = the latitude coordinate
+#              ci = the contour interval
+#              cmin = the minimum of the contour range
+#              cmax = the maximum of the contour range
+#              titlestr = the title of the map
+#              x1 = position of the left edge
+#              x2 = position of the right edge
+#              y1 = position of the bottom edge
+#              y2 = position of the top edge
+#              labels = True/False (ticks and  labels are plotted if true) 
+#              cmap = color map (only set up for blue2red at the moment)
+#    """
+#
+#    # set up contour levels and color map
+#    nlevs = (cmax-cmin)/ci + 1
+#    clevs = np.arange(cmin, cmax+ci, ci)
+#     
+#    if (cmap == "blue2red"):
+#        mymap = mycolors.blue2red_cmap(nlevs)
+#
+#    if (cmap == "precip"):
+#        mymap = mycolors.precip_cmap(nlevs)
+#
+#    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
+#    ax.set_aspect('auto')
+#    ax.add_feature(cfeature.COASTLINE)
+#    ax.set_extent([-85, -30, -62, 20], crs = ccrs.PlateCarree())
+#
+#    #if (labels):
+#     #   ax.set_xticks([-150, -100, -50], crs = ccrs.PlateCarree())
+#     #   ax.set_xticklabels(['150W','100W','50W'], fontsize=12)
+#     #   ax.set_yticks([20,40,60,80], crs = ccrs.PlateCarree())
+#     #   ax.set_yticklabels(['20N','40N','60N','80N'], fontsize=12)
+#     #   ax.xformatter = LongitudeFormatter()
+#     #   ax.yformatter = LatitudeFormatter()
+#
+#    ax.set_title(titlestr, fontsize=16)
+#
+#    dat, lon = add_cyclic_point(dat, coord=lon)
+#    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
+#
+#    return ax
 
 def contourmap_southamerica_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
  x1, x2, y1, y2, labels=True, cmap="blue2red"):

@@ -29,7 +29,7 @@ def plotlinetime_j2d_monthly(fig, data, x1, x2, y1, y2, titlestr, yrange=None,
         ax.set_yticks(yticks)
 
     if (yticklabels):
-        ax.set_yticklabels(yticklabels, fontsize=14)
+        ax.set_yticklabels(yticklabels, fontsize=12)
 
     if (ytitle):
         ax.set_ylabel(ytitle, fontsize=14)
@@ -39,7 +39,7 @@ def plotlinetime_j2d_monthly(fig, data, x1, x2, y1, y2, titlestr, yrange=None,
     ax.set_xticks(monticks)
     ax.set_xticklabels([])
     ax.set_xticks(monticks2, minor=True)
-    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True, fontsize=14)
+    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True, fontsize=12)
     ax.set_title(titlestr, fontsize=16)
 
     if linecolor is not None:

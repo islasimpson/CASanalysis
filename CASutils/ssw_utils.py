@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from scipy.ndimage import label
 from math import nan
+import pdb
 
 def getseason_ndjfma(dat):
     """
@@ -50,7 +51,10 @@ def ssw_cp(dat):
     uneg = datseas.copy(deep=True)
     uneg = uneg.where( uneg < 0, 0)
     sswnum, count = label(uneg)
-    sswnum = xr.DataArray(sswnum, coords=[datseas.time], dims=['time'], name='sswnum')
+
+    sswnum = sswnum[:,0]
+#    sswnum = sswnum[:]
+    sswnum = xr.DataArray(sswnum, coords=[datseas.time.values], dims=['time'], name='sswnum')
 
     dset = xr.merge([datseas, sswnum])
 
@@ -78,10 +82,12 @@ def ssw_cp(dat):
         else:
             enddate = str(datessw[issw].dt.year.values).zfill(4)+"-04-30"
         test = datseas.sel(time=slice(startdate,enddate))
-        
+       
         # pick out slices that are westerly between SSW and April 30th
         test = test.where(test > 0, 0)
         westerly, countwesterly = label(test)
+        westerly = westerly[:,0]
+        #westerly = westerly[:]
         westerly = xr.DataArray(westerly, coords=[test.time], dims=['time'], name='westerly')
         flagok = 0
         for iwesterly in np.arange(0,countwesterly,1):
@@ -122,6 +128,8 @@ def ssw_cp(dat):
             # now testing for westerlies since the last SSW.
                 sincelast = sincelast.where(sincelast > 0, 0)
                 westerly, countwesterly = label(sincelast)
+                westerly = westerly[:,0]
+                #westerly = westerly[:]
                 westerly = xr.DataArray(westerly, coords=[sincelast.time], dims=['time'], name='westerly')
                 flagok = 0
                 for iwesterly in np.arange(0,countwesterly,1):

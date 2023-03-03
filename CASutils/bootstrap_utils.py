@@ -304,14 +304,14 @@ def boot_corsignif_multidim(a1, a2, dim, nboots=1000, seed=None, signan=True):
     bootcoords_1 = [ ("iboot", np.arange(0,nboots,1))]
     for icoord in range(0,len(dims_1)):
         dimboot_1.append(a1[dims_1[icoord]].size)
-        bootcoords_1.append( (dims_1[icoord], a1[dims_1[icoord]] ))
+        bootcoords_1.append( (dims_1[icoord], a1[dims_1[icoord]].values ))
 
     dims_2 = a2.dims
     dimboot_2 = [nboots]
     bootcoords_2 = [ ("iboot", np.arange(0,nboots,1))]
     for icoord in range(0,len(dims_2)):
         dimboot_2.append(a2[dims_2[icoord]].size)
-        bootcoords_2.append( (dims_2[icoord], a2[dims_2[icoord]] ))
+        bootcoords_2.append( (dims_2[icoord], a2[dims_2[icoord]].values ))
 
     kwargs = {dim: ranu}
     a1boot = a1.isel(**kwargs)
@@ -319,6 +319,7 @@ def boot_corsignif_multidim(a1, a2, dim, nboots=1000, seed=None, signan=True):
 
     a1boot_reshape = np.reshape(np.array(a1boot), dimboot_1)
     a2boot_reshape = np.reshape(np.array(a2boot), dimboot_2)
+
 
     a1boot_xr = xr.DataArray(a1boot_reshape, coords=bootcoords_1)
     a2boot_xr = xr.DataArray(a2boot_reshape, coords=bootcoords_2)
