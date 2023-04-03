@@ -128,3 +128,112 @@ def calc_season_nharm(darray, nharms, dimtime=0):
     darray_filtered_xr = xr.DataArray(darray_filtered, coords = darray.coords)
 
     return darray_filtered_xr
+
+def runningmean(dat, nysm, timeaxis='time', dropna=False):
+    """dat = your data with a time axis with name equal to whatever you set "timeaxis" to
+       nysm = the number of time values in your running mean
+       dropna = False if you don't want to drop the NaN's at the edges
+    """
+
+    window_kwargs = {timeaxis:nysm}
+    if (dropna):
+        datm = dat.rolling(center=True, min_periods=1, **window_kwargs).mean(timeaxis).dropna(timeaxis)
+    else:
+        datm = dat.rolling(center=True, min_periods=1, **window_kwargs).mean(timeaxis)
+    return datm
+
+def runningmean_cyclic(dat, nysm, timeaxis='time', dropna=False):
+    """dat = your data with a time axis with name equal to whatever you set "timeaxis" to
+       nysm = the number of time values in your running mean
+       dropna = False if you don't want to drop the NaN's at the edges
+    """
+    window_kwargs = {timeaxis:nysm}
+    npad = np.int((nysm - 1)/2.)
+    pad_width_kwargs={timeaxis:npad}
+    datm = dat.pad(mode='wrap', **pad_width_kwargs).rolling(center=True, min_periods=1, **window_kwargs).mean(timeaxis).dropna(timeaxis)
+    return datm
+
+def wkfilter(dat, ftaper, kmin, kmax, pmin, pmax, spd=1):
+    """ 
+    dat = an xarray DataArray with dimensions time and lon and watever other dimensions
+          you like.
+    ftaper = the fraction of the data that's used for tapering.  ftaper/2 will be tapered
+             at each end.
+    kmin = the minimum wavenumber included in the output
+    kmax = the maximum wavenumber included in the output
+    pmin = the minimum period (in days) included in the output
+    pmax = the maximum period (in days) included in the output
+    spd = the number of time stamps per day
+
+    Negative wavenumbers = westward propagating
+    Positive wavenumbers = eastward propagating
+
+    Only use positive frequencies as the FFT coefficients are multiplied by 2 before inverting
+
+    """
+
+    #---Convert min/max period to min/max frequency
+    fmin = 1./pmax ; fmax = 1./pmin
+
+    #---Find the dimensions other than lon and time 
+    dims = np.array(dat.dims)
+    coords = dat.coords
+
+    #---Check the dataset has the required dimensions and that only positive frequencies are used
+    assert (dims == 'time')[ ~((dims == 'time') == False) ][0] == True, f"Error, you need to have a time dimension"
+    assert (dims == 'lon')[ ~((dims == 'lon') == False) ][0] == True, f"Error, you need to have a lon dimension"
+    assert ( (pmin >= 0) & (pmin >= 0)), f"Error, you can't choose negative periods/frequencies"
+
+
+
+    #---Taper the time series
+    npts = int(np.rint(ftaper*dat.time.size))
+    endtaper = np.hanning(npts)
+    taper = np.ones(dat.time.size)
+    taper[0:npts//2+1] = endtaper[0:npts//2+1]
+    taper[-npts//2+1:] = endtaper[npts//2+1:]
+    taper = xr.DataArray(taper, coords=[dat.time], dims=['time'], name='taper')
+    dat_tp = taper*dat
+
+    #---Do the FFTs and organize the dimensions
+    londim = dat_tp.dims.index('lon')
+    timedim = dat_tp.dims.index('time')
+
+    z = np.fft.fft(dat_tp, axis=londim) / dat_tp.lon.size
+    z = np.fft.fft(z, axis=timedim) / dat_tp.time.size
+
+    dimsfft = []
+    coordsfft = []
+    for i in np.arange(0,len(dims),1):
+        if (dims[i] == 'time'):
+            dimsfft.append('frequency')
+            frequency = xr.DataArray(np.fft.fftfreq(dat.time.size, 1./spd), dims=['frequency'])
+            coordsfft.append(frequency)
+        elif (dims[i] == 'lon'):
+            dimsfft.append('wavenumber')
+            wavenumber = xr.DataArray(np.fft.fftfreq(dat.lon.size, 1./dat.lon.size), dims=['wavenumber'])
+            coordsfft.append(wavenumber)
+        else:
+            dimsfft.append(dims[i])
+            coordsfft.append(coords[dims[i]])
+
+    z = xr.DataArray(z, dims=dimsfft, coords = coordsfft)
+
+    #---Select the desired wavenumbers and frequencies
+    zselect = z.where( ((z.wavenumber >= kmin) & (z.wavenumber <= kmax)) & 
+                       ((z.frequency >= fmin) & (z.frequency <= fmax)), 0)
+
+    #---Invert
+    izselect = np.fft.ifft(zselect, axis=timedim)*zselect.frequency.size
+    izselect = np.fft.ifft(izselect, axis=londim)*zselect.wavenumber.size
+
+    izselect = 2.*np.real(izselect)
+
+    izselect = xr.DataArray( izselect, dims=dims, coords = coords) 
+
+    return izselect
+
+
+
+
+
