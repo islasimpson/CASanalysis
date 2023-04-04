@@ -211,7 +211,7 @@ def wkfilter(dat, ftaper, kmin, kmax, pmin, pmax, spd=1):
             coordsfft.append(frequency)
         elif (dims[i] == 'lon'):
             dimsfft.append('wavenumber')
-            wavenumber = xr.DataArray(np.fft.fftfreq(dat.lon.size, 1./dat.lon.size), dims=['wavenumber'])
+            wavenumber = xr.DataArray(-1.*np.fft.fftfreq(dat.lon.size, 1./dat.lon.size), dims=['wavenumber'])
             coordsfft.append(wavenumber)
         else:
             dimsfft.append(dims[i])
