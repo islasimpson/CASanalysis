@@ -292,7 +292,7 @@ def calcannualmean(ds, skipna=False):
     #--Note if the NaN's are different in each variable you'll be averaging over
     #-- different times for each variable
     if (str(type(ds)) == "xarray.core.dataset.Dataset"):
-        varnames = list(isddat.keys())
+        varnames = list(ds.keys())
         for i, ivar in enumerate(varnames):
             var = ds[ivar]
             if (skipna):
