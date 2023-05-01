@@ -253,3 +253,51 @@ def YYYYMMDD2date(date, caltype='standard'):
 def MMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%m%d')
     return time
+
+def group_daily2yearly(dat):
+    years = dat['time.year']
+    ybeg = np.array(years[0])
+    yend = np.array(years[len(years)-1])
+
+    datyear=[]
+    for iyear in np.arange(ybeg,yend+1,1):
+        yearlydat = dat.sel(time=slice(str(iyear)+'-01-01', str(iyear)+'-12-31'))
+        yearlydat['time'] = np.arange(0,365,1)
+        datyear.append(yearlydat)
+
+    datyear = xr.concat(datyear, dim='year')
+    return datyear
+
+def calcannualmean(ds, skipna=False):
+    """ Calculate the annual mean weighting the months of the year appropriately if
+        given the calendar type
+    """
+
+    def dothecalc(var):
+        month_length = var.time.dt.days_in_month
+        weights = month_length.groupby('time.year') / month_length.groupby('time.year').sum()
+        #var_sum = (var*weights).groupby('time.year').sum('time')
+        var_sum = (var*weights).groupby('time.year').sum('time', skipna=False)
+        ones_sum = (weights).groupby('time.year').sum('time')
+        var_am = var_sum / ones_sum
+        return var_am
+
+    #--Note if the NaN's are different in each variable you'll be averaging over
+    #-- different times for each variable
+    if (str(type(ds)) == "xarray.core.dataset.Dataset"):
+        varnames = list(isddat.keys())
+        for i, ivar in enumerate(varnames):
+            var = ds[ivar]
+            if (skipna):
+                var = var.dropna()
+            if (i == 0):
+                ds_am = var_am
+            else:
+                ds_am = xr.merge([ds_am, var_am])
+    else:
+        ds_am = dothecalc(ds)
+
+    return ds_am
+
+
+
