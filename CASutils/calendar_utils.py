@@ -283,7 +283,7 @@ def group_monthly2yearly(dat):
     datyear=[]
     for iyear in np.arange(ybeg,yend+1,1):
         yearlydat = dat.sel(time=slice(str(iyear)+'-01-01', str(iyear)+'-12-31'))
-        yearlydat['time'] = np.arange(0,13,1)
+        yearlydat['time'] = np.arange(0,12,1)
         datyear.append(yearlydat)
 
     datyear = xr.concat(datyear, dim='year')
