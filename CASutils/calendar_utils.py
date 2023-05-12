@@ -275,34 +275,64 @@ def group_daily2yearly(dat):
     datyear = xr.concat(datyear, dim='year')
     return datyear
 
+def group_monthly2yearly(dat)
+    years = dat['time.year']
+    ybeg = np.array(years[0])
+    yend = np.array(years[len(years)-1])
+
+    datyear=[]
+    for iyear in np.arange(ybeg,yend+1,1):
+        yearlydat = dat.sel(time=slice(str(iyear)+'-01-01', str(iyear)+'-12-31'))
+        yearlydat['time'] = np.arange(0,13,1)
+        datyear.append(yearlydat)
+
+    datyear = xr.concat(datyear, dim='year')
+    return datyear
+
+
 def calcannualmean(ds, skipna=False):
     """ Calculate the annual mean weighting the months of the year appropriately if
         given the calendar type
     """
 
-    def dothecalc(var):
+    def dothecalc(var, skipna=False):
         month_length = var.time.dt.days_in_month
-        weights = month_length.groupby('time.year') / month_length.groupby('time.year').sum()
-        #var_sum = (var*weights).groupby('time.year').sum('time')
-        var_sum = (var*weights).groupby('time.year').sum('time', skipna=False)
-        ones_sum = (weights).groupby('time.year').sum('time')
-        var_am = var_sum / ones_sum
+        wghts = month_length.groupby('time.year') / month_length.groupby('time.year').sum()
+        if (skipna):
+            datsum = (var*wghts).groupby('time.year').sum(dim='time', skipna=True)
+            cond = var.isnull()
+            ones = xr.where(cond, 0, 1)
+            onesum = (ones*wghts).groupby('time.year').sum(dim='time')
+        else:
+            datsum = (var*wghts).groupby('time.year').sum(dim='time', skipna=False)
+            cond = var.isnull()
+            ones = xr.where(cond, 1, 1)
+            onesum = (ones*wghts).groupby('time.year').sum(dim='time')     
+
+        var_am = datsum / onesum      
         return var_am
 
     #--Note if the NaN's are different in each variable you'll be averaging over
     #-- different times for each variable
-    if (str(type(ds)) == "xarray.core.dataset.Dataset"):
+    dset = False
+    try:
         varnames = list(ds.keys())
+        dset = True
+    except:
+        pass
+
+    if (dset):
         for i, ivar in enumerate(varnames):
             var = ds[ivar]
-            if (skipna):
-                var = var.dropna()
+            var_am = dothecalc(var, skipna=skipna)
+            var_am = var_am.rename(ivar)
             if (i == 0):
                 ds_am = var_am
             else:
                 ds_am = xr.merge([ds_am, var_am])
     else:
-        ds_am = dothecalc(ds)
+        ds_am = dothecalc(ds, skipna=skipna)
+
 
     return ds_am
 
