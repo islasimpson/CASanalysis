@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from qtrendutils import colormap_utils as mycolors
+from CASutils import colormap_utils as mycolors
 import sys
 
 def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True):
