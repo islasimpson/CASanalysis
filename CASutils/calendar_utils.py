@@ -275,7 +275,7 @@ def group_daily2yearly(dat):
     datyear = xr.concat(datyear, dim='year')
     return datyear
 
-def group_monthly2yearly(dat)
+def group_monthly2yearly(dat):
     years = dat['time.year']
     ybeg = np.array(years[0])
     yend = np.array(years[len(years)-1])
