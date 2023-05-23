@@ -378,6 +378,21 @@ def oplotlinetime_j2j(ax, data, linecolor=None):
  
     return ax
 
+def oplotfill_j2j(ax, dat1, dat2, fillcolor='lightgray'):
+    """ Over plot fill on a line plot already created using plotlinetime_j2j"""
+    july1 = 181
+    dat1plot = np.zeros([dat1.size])
+    dat1plot[0:365-july1] = dat1[july1:365]
+    dat1plot[365-july1:365] = dat1[0:july1]
+
+    dat2plot = np.zeros([dat2.size])
+    dat2plot[0:365-july1] = dat2[july1:365]
+    dat2plot[365-july1:365] = dat2[0:july1]
+
+    ax.fill_between(np.arange(0,365,1),dat1plot, dat2plot, color=fillcolor)
+    return ax
+
+
 def oplotrange_j2j(ax, minline, maxline, color=None):
     """overplot a range on a plot already created using plotlinetime_j2j"""
     july1 = 181
