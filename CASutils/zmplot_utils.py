@@ -160,13 +160,23 @@ def plotlatlinearpre_sh(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     return ax
 
 
-def plotlatlinearpre(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True):
+def plotlatlinearpre(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, cmap='blue2red'):
     """
     Plot a pressure versus latitude contour plot on a linear pressure scale
     """
     nlevs = (cmax - cmin)/ci + 1
     clevs = np.arange(cmin, cmax+ci, ci)
-    mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
+
+    if (cmap == "precip_nowhite"):
+        mymap = mycolors.precip_cmap_nowhite(nlevs)
+
+
 
     plt.rcParams['font.size'] = '12'
 
