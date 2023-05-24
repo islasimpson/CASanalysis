@@ -97,7 +97,7 @@ def plotlatlogpre_to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=
 
 
 
-def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, fsize=11, cmap='blue2red'):
+def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, yticklabels=True, fsize=11, cmap='blue2red'):
     """
     Plot a pressure versus latitude contour plot up to 0.01hPa.
     """
@@ -123,7 +123,11 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     ax.contour(lat,-1.*np.log10(pre), data, levels=clevs[ clevs != 0], colors='black', linewidths=0.5)
     ax.set_ylim(-np.log10(1000.),-np.log10(0.1))
     ax.set_yticks([-np.log10(1000),-np.log10(100),-np.log10(10),-np.log10(1),-np.log10(0.1)])
-    ax.set_yticklabels(['1000','100','10','1','0.1'])
+
+    if (yticklabels):
+        ax.set_yticklabels(['1000','100','10','1','0.1'])
+    else
+        ax.set_yticklabels([' ',' ',' ',' ',' '])
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)', labelpad=-4)
     ax.set_title(titlestr, fontsize=fsize+2)
@@ -160,7 +164,7 @@ def plotlatlinearpre_sh(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     return ax
 
 
-def plotlatlinearpre(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, cmap='blue2red'):
+def plotlatlinearpre(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, cmap='blue2red', yticklabel=True):
     """
     Plot a pressure versus latitude contour plot on a linear pressure scale
     """
@@ -186,7 +190,11 @@ def plotlatlinearpre(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0
     ax.contour(lat,-1.*pre, data, levels=clevs[ clevs != 0], colors='black', linewidths=0.5)
     ax.set_ylim(-1000.,-10)
     ax.set_yticks([-1000,-800,-600,-400,-200,0])
-    ax.set_yticklabels(['1000','800','600','400','200','0'])
+    if (yticklabel):
+        ax.set_yticklabels(['1000','800','600','400','200','0'])
+    else:
+        ax.set_yticklabels([' ',' ',' ',' ',' ',' '])
+
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)', labelpad=-4)
     ax.set_title(titlestr, fontsize=16)
