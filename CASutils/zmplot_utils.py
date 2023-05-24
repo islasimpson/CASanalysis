@@ -126,7 +126,7 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
 
     if (yticklabels):
         ax.set_yticklabels(['1000','100','10','1','0.1'])
-    else
+    else:
         ax.set_yticklabels([' ',' ',' ',' ',' '])
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)', labelpad=-4)
