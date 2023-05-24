@@ -89,4 +89,24 @@ def precip_cmap(n, nowhite=False):
 
     return mymap
 
+def precip_cmap_nowhite(n):
+    """ combine two existing color maps to create a diverging color map with white in the middle.
+    browns for negative, blues for positive
+    n = the number of contour intervals
+    """
+    if (int(n/2) == n/2):
+        # even number of contours
+        nneg=n/2
+        npos=n/2
+    else:
+        nneg = (n-1)/2
+        npos = (n-1)/2
+
+    colors1 = plt.cm.YlOrBr_r(np.linspace(0,0.8, int(nneg)))
+    colors2 = plt.cm.GnBu(np.linspace(0.2,1, int(npos)))
+
+    colors = np.vstack((colors1, colors2))
+    mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+
+    return mymap
 
