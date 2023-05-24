@@ -41,7 +41,7 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
         mymap = mycolors.precip_cmap(nlevs, nowhite)
 
     if (cmap == "precip_nowhite"):
-        mymap = mycolors.precip_cmap_nowhite(nlevs, nowhite)
+        mymap = mycolors.precip_cmap_nowhite(nlevs)
 
 
     if (cmap == 'red2blue'):
