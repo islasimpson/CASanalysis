@@ -70,6 +70,11 @@ def plotlatlogpre_to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=
     if (cmap == "precip"):
         mymap = mycolors.precip_cmap(nlevs)
 
+    if (cmap == "precip_nowhite"):
+        mymap = mycolors.precip_cmap_nowhite(nlevs)
+
+
+
     plt.rcParams['font.size'] = fsize 
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
@@ -106,6 +111,9 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
 
     if (cmap == "precip"):
         mymap = mycolors.precip_cmap(nlevs)
+
+    if (cmap == "precip_nowhite"):
+        mymap = mycolors.precip_cmap_nowhite(nlevs)
 
     plt.rcParams['font.size'] = fsize 
 
