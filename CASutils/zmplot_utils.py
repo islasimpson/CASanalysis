@@ -87,7 +87,7 @@ def plotlatlogpre_to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=
 
 
 
-def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, fsize=11):
+def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, fsize=11, cmap='blue2red'):
     """
     Plot a pressure versus latitude contour plot up to 0.01hPa.
     """
@@ -95,7 +95,12 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
     clevs = np.arange(cmin, cmax+ci, ci)
-    mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
 
     plt.rcParams['font.size'] = fsize 
 
