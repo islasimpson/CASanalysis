@@ -332,7 +332,7 @@ def calcannualmean(ds, skipna=False):
                 ds_am = xr.merge([ds_am, var_am])
     else:
         ds_am = dothecalc(ds, skipna=skipna)
-
+        ds_am = ds_am.rename(ds.name)
 
     return ds_am
 
