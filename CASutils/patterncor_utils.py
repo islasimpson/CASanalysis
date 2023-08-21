@@ -19,11 +19,11 @@ def weightedspatialcor(dat1, dat2, w, londim='lon', latdim='lat'):
     """
 
     # give zero weight to the locations that have NaNs
-    w = w.where( ~(np.isnan(dat1) & np.isnan(dat2) & np.isnan(w)), 0)
+    w = w.where( ~(np.isnan(dat1) | np.isnan(dat2) | np.isnan(w)), 0)
     # set data to zero where you have zero weight to avoid having NaNs
     dat1 = dat1.where( w != 0, 0)
     dat2 = dat2.where( w != 0, 0)
-   
+
     # weight the arrays
     dat1w = dat1.weighted(w)
     dat2w = dat2.weighted(w)
