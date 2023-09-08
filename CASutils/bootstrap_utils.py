@@ -25,7 +25,7 @@ def bootdif2means(dat1, dat2):
     return signif
 
 
-def bootgen(darray, nsamples=None, seed=None, nboots=1000):
+def bootgen(darray, nsamples=None, seed=None, nboots=1000, resample=True):
     """Generate nboots bootstrap samples from darray with nsamples within each bootstrap.
     Sampling is done from the left most dimension
     If nsamples = None then nsamples = the length of the left most dimension.
@@ -40,6 +40,35 @@ def bootgen(darray, nsamples=None, seed=None, nboots=1000):
         nboots = the number of bootstrap samples consisting of nsamples each
 
     """
+
+    if (~(resample) & (nsamples == None)):
+        print("You can't use nsamples == None and resample=True")
+        sys.exit()
+    else:
+        dims = darray.dims
+        if (nsamples > (darray[dims[0]].size / 2.)):
+           print("Warning, you've chosen to not resample, but also have a large sample size compared to your dataset")
+
+
+    def resolve_duplicates(dat):
+        u, c = np.unique(dat, return_counts=True)
+        if (np.max(c) > 1):
+            idup = np.argwhere( c > 1 )
+            for i in np.arange(0,len(idup),1):
+                dupval = u[idup[i]]
+                print(dupval)
+                duparg = np.argwhere( dat == dupval )
+                for j in np.arange(1,len(duparg),1):
+                    ichange = duparg[j]
+                    while True:
+                        newval = np.floor(np.random.uniform(0,nmemin,1)).astype(int)
+                        test = ( (dat - newval) == 0)
+                        dat[ichange] = newval
+                        if (~test.any()):
+                           break
+
+        return dat
+
 
     ### exit if darray is a dataset.
     if (str(type(darray)) == "xarray.core.dataset.Dataset"):
@@ -84,6 +113,11 @@ def bootgen(darray, nsamples=None, seed=None, nboots=1000):
     ### do the resampling
     ranu = np.random.uniform(0,nmemin,nboots*nsamples)
     ranu = np.floor(ranu).astype(int)
+
+    if (resample == False):
+        ranu_reshape = ranu.reshape([nboots, nsamples])
+        undup = [ resolve_duplicates(ranu_reshape[i,:]) for i in np.arange(0,nboots,1)]
+        ranu = ranu_reshape.reshape([nboots*nsamples])
 
     bootdat = np.array(darray[ranu])
     bootdat = bootdat.reshape(dimboot2d)
@@ -205,6 +239,79 @@ def bootgenchunk_multimem(darray, nyears, nmems, nboots, seed=None):
         pass
 
     return bootdat
+
+
+def bootgenchunk_multimem_avg(darray, nyears, nmems, nboots, seed=None):
+    """Generate nboot samples with nmems members containing chunks of length nyears"""
+
+    ### exit if darray is a dataset.
+    if (str(type(darray)) == "xarray.core.dataset.Dataset"):
+        print("this function doesn't accept datasets, convert to data array")
+        sys.exit()
+
+    ###if it's an xarray dataset, set up the dimensions
+    try:
+        dims = darray.dims
+ 
+        nmemin = darray[dims[0]].size
+
+        dimboot = [nmems*nboots]
+        dimboot2d = [nboots, nmems]
+#        bootcoords = [('iboot', np.arange(0,nboots,1)), ('imem', np.arange(0,nmems,1)), ('isample', np.arange(0,nyears,1))]
+        bootcoords={'iboot': np.arange(0,nboots,1), 'imem':np.arange(0,nmems,1)}
+        for icoord in range(1,len(dims)):
+            dimboot.append(darray[dims[icoord]].size)
+            dimboot2d.append(darray[dims[icoord]].size)
+            #bootcoords.append( (dims[icoord], darray[dims[icoord]] ))
+            bootcoords[dims[icoord]] = darray[dims[icoord]]
+
+#        print("you are using an xarray dataarray")
+   
+    except:
+        nmemin = darray.shape[0]
+
+        dimboot = [nyears*nboots]
+        dimboot2d = [nboots, nyears]
+        for icoord in range(1,len(darray.shape)):
+            dimboot.append(darray.shape[icoord])
+            dimboot2d.append(darray.shape[icoord])
+
+        print("you are using a numpy array")
+
+    ### generate random number for bootstrapping
+    if (seed):
+        np.random.seed(seed)
+
+    ### do the resampling
+    ranu = np.random.uniform(0,nmemin-nyears,nboots*nmems)
+    ranu = np.floor(ranu).astype(int)
+
+    bootdat = np.zeros(dimboot2d)
+    for iboot in np.arange(0,nboots,1):
+        for imem in np.arange(0,nmems,1):
+            bootdat[iboot,imem,...] = darray[ranu[iboot*nmems + imem]:ranu[iboot*nmems+imem]+nyears].mean('year')
+   
+
+#    bootdat = np.array(darray[ranu])
+#    bootdat = bootdat.reshape(dimboot2d)
+
+#    print(bootdat)
+#    print(bootcoords)
+
+
+    try:
+        bootdat = xr.DataArray(bootdat, coords=bootcoords)
+    except:
+        pass
+
+    return bootdat
+
+
+
+
+
+
+
 
 
 def boot_regcoefs(a1,a2,sigx=None,sigy=None,nboots=1000):
