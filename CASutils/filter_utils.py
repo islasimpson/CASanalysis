@@ -137,9 +137,9 @@ def runningmean(dat, nysm, timeaxis='time', dropna=False):
 
     window_kwargs = {timeaxis:nysm}
     if (dropna):
-        datm = dat.rolling(center=True, min_periods=1, **window_kwargs).mean(timeaxis).dropna(timeaxis)
+        datm = dat.rolling(center=True, min_periods=nysm, **window_kwargs).mean(timeaxis).dropna(timeaxis)
     else:
-        datm = dat.rolling(center=True, min_periods=1, **window_kwargs).mean(timeaxis)
+        datm = dat.rolling(center=True, min_periods=nysm, **window_kwargs).mean(timeaxis)
     return datm
 
 def runningmean_cyclic(dat, nysm, timeaxis='time', dropna=False):
@@ -234,6 +234,27 @@ def wkfilter(dat, ftaper, kmin, kmax, pmin, pmax, spd=1):
     return izselect
 
 
+def wkfilter_flux(x1, x2, ftaper, spd=1):
+    """ Function to compute the flux (x1'x2') associated with
+        eastward and westward propagating waves separately
+        Inputs: x1 (first field)
+                x2 (second field)
+                ftaper (the fraction of the time series used for tapering f/2 is used at each end)
+                spd (the number of time stamps per day)
+        Outputs: eastward (the flux due to eastward propagating waves)
+                 westward (the flux due to westward propagating waves)
+    """
+    x1e = wkfilter(x1, ftaper, 1, x1.lon.size, spd, x1.time.size, spd=spd)
+    x1w = wkfilter(x1, ftaper, -1*x1.lon.size, -1, spd, x1.time.size, spd=spd)
 
+    x2e = wkfilter(x2, ftaper, 1, x2.lon.size, spd, x2.time.size, spd=spd)
+    x2w = wkfilter(x2, ftaper, -1*x2.lon.size, -1, spd, x2.time.size, spd=spd)
 
+    fluxe = x1e*x2e
+    fluxw = x1w*x2w
 
+    fluxe = fluxe.rename('eastward')
+    fluxw = fluxw.rename('westward')
+
+    flux = xr.merge([fluxe, fluxw])
+    return flux
