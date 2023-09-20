@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from dycoreutils import colormap_utils as mycolors
 import sys
 from scipy.ndimage import label
 from math import nan
+import matplotlib.colors as colors
 
-def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None):
+def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None, speclevs=None):
     """
     Plots a QBO time series as a function of time and log(pressure) 
     """
@@ -13,8 +15,12 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     data = data.transpose(plevvar,"time")
 
     # set up contour levels and color map
-    nlevs = (cmax-cmin)/ci + 1
-    clevs = np.arange(cmin, cmax+ci, ci)
+    if (speclevs):
+        clevs = speclevs
+        nlevs = len(clevs)
+    else:
+        nlevs = (cmax-cmin)/ci + 1
+        clevs = np.arange(cmin, cmax+ci, ci)
     mymap = mycolors.blue2red_cmap(nlevs)
 
     plt.rcParams['font.size'] = '12'
@@ -24,7 +30,11 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     else:
         ax = fig.add_axes()
 
-    ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both')
+    if (speclevs):
+        norm = colors.BoundaryNorm(boundaries=clevs, ncolors=256)
+        ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both', norm=norm)
+    else:
+        ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both')
     ax.set_ylim(-np.log10(100.),-np.log10(1))
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),
                    -np.log10(3),-np.log10(1)])
