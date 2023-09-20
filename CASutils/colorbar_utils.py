@@ -202,16 +202,14 @@ def plotcolorbar_sayc(fig, clevs, titlestr, x1, x2, y1, y2,
         clevplot = clevs[clevs <= 0]
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
-    #norm = mpl.colors.Normalize(vmin=cmin, vmax=cmax)
-    #norm = mpl.colors.Normalize(vmin=clevs[0], vmax=clevs[len(clevs)-1])
-
+    
     ci = (np.max(clevs) - np.min(clevs))/len(clevs)
-    norm = mpl.colors.Normalize(vmin=clevs[0], vmax=clevs[len(clevs)-1])
-
+    norm = mpl.colors.Normalize(vmin=clevs[0]+ci/2., vmax = clevs[0] + (len(clevs)-1)*ci -ci/2.)
 
     clb = mpl.colorbar.ColorbarBase(ax, cmap=mymap,
-        orientation=orient, norm=norm, values=clevs[0] + np.arange(0,len(clevs),1)*ci - ci/2.,
+        orientation=orient, norm=norm, values=clevs[0] + np.arange(0,len(clevs)-1,1)*ci+ ci/2.,
         ticks=clevs[0] + np.arange(0,len(clevs),1)*ci)
+
     clb.set_ticklabels(clevs)
 
     clb.ax.tick_params(labelsize=fsize)
