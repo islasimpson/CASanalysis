@@ -9,6 +9,10 @@ import cartopy.feature as cfeature
 from cartopy.util import add_cyclic_point
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import matplotlib.ticker as mticker
+from cartopy.feature import NaturalEarthFeature
+from cartopy.io.shapereader import Reader
+from cartopy.feature import ShapelyFeature
+import cartopy.io.shapereader as shpreader
 
 
 def contourmap_bothcontinents_fill_nh_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
