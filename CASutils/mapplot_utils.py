@@ -764,8 +764,6 @@ def contourmap_med_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
     ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
-    ax.set_extent([-40, 60, 10, 80], crs = ccrs.PlateCarree())
 
 #    if (labels):
 #        ax.set_xticks([-90,-60, -30, 0, 30], crs = ccrs.PlateCarree())
@@ -778,7 +776,7 @@ def contourmap_med_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
     ax.set_title(titlestr, fontsize=16)
 
     dat, lon = add_cyclic_point(dat, coord=lon)
-    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
+    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend='both')
 
     if (contourlines):
         clevs = clevs[np.abs(clevs) > ci/2.]
@@ -791,10 +789,16 @@ def contourmap_med_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
     if ( signifdat is not None ):
         lonsignif = signifdat.lon
         signifdat, lonsignif = add_cyclic_point( signifdat, coord=lonsignif)
-        ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray', transform = ccrs.PlateCarree())
+        ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray', 
+          transform = ccrs.PlateCarree())
 
     if (maskocean):
         ax.add_feature(cart.feature.OCEAN, zorder=1, edgecolor='k')
+
+    ax.set_extent([-40, 60, 10, 80], crs = ccrs.PlateCarree())
+    ax.add_feature(cfeature.COASTLINE)
+
+
 
     return ax
 
@@ -958,8 +962,6 @@ def contourmap_africa_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
     ax.set_aspect('auto')
-    ax.add_feature(cfeature.COASTLINE)
-    ax.set_extent([-25, 55, -40, 40], crs = ccrs.PlateCarree())
 
     #if (labels):
      #   ax.set_xticks([-150, -100, -50], crs = ccrs.PlateCarree())
@@ -973,6 +975,9 @@ def contourmap_africa_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
 
     dat, lon = add_cyclic_point(dat, coord=lon)
     ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap)
+    ax.add_feature(cfeature.COASTLINE)
+    ax.set_extent([-25, 55, -40, 40], crs = ccrs.PlateCarree())
+
 
     return ax
 
@@ -1490,4 +1495,61 @@ def contourmap_australia_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titlest
     #ax.scatter(lon, lat, c=dat, marker="o", vmin=-170, vmax=170, cmap="RdYlBu_r")
     return ax
 
+def contourmap_usa_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
+ x1, x2, y1, y2, cmap='blue2red', contourlines=False, contourlinescale=1, fsize=10):
+    """plot a contour map of data onto the USA with no border and state outlines"""
+
+    # set up contour levels and color map
+    nlevs = (cmax-cmin)/ci + 1
+    clevs = np.arange(cmin, cmax+ci,ci)
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
+
+    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection = ccrs.LambertConformal())
+    ax.outline_patch.set_visible(False)
+    ax.set_extent([240,286,25,50], crs = ccrs.PlateCarree())
+
+    # get the states shapes
+    states_shp = shpreader.natural_earth(resolution='50m',category='cultural',
+                   name='admin_1_states_provinces_lakes')
+    states_reader = shpreader.Reader(states_shp)
+    states = states_reader.records()
+    for state in shpreader.Reader(states_shp).geometries():
+        ax.add_geometries([state],ccrs.PlateCarree(),facecolor='none',
+              edgecolor=[0.6,0.6,0.6],lw=0.4,zorder=3)
+
+    country_shp = shpreader.natural_earth(resolution='50m',category='cultural',
+                  name='admin_0_countries')
+    country_reader = shpreader.Reader(country_shp)
+    countries = country_reader.records()
+
+    ocean = cart.feature.NaturalEarthFeature('physical','ocean','50m')
+
+    ax.contourf(lon, lat, dat, levels=clevs, cmap=mymap,
+                transform=ccrs.PlateCarree(), extend='both')
+
+    if (contourlines):
+        clevlines = clevs*contourlinescale
+        clevlines = clevlines[np.abs(clevlines) > ci/2. ]
+        ax.contour(lon,lat,dat, levels=clevlines, colors='black', transform=ccrs.PlateCarree())
+
+    for country in countries:
+        if country.attributes['ADM0_A3'] == 'USA':
+            ax.add_geometries([country.geometry],ccrs.PlateCarree(),facecolor='none',
+                edgecolor='black',lw=0.5,zorder=200)
+        else:
+            ax.add_geometries([country.geometry], ccrs.PlateCarree(),facecolor='white',
+                edgecolor='white',lw=0.5,zorder=100)
+
+    ax.add_feature(ocean, facecolor='white', edgecolor='white', zorder=100)
+
+    ax.text(241,25,titlestr, color='black', transform=ccrs.PlateCarree(), fontsize=fsize, zorder=300,
+         ha='left',va='bottom')
+
+
+    return ax
 
