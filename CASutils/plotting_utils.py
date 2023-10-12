@@ -42,4 +42,52 @@ def plot2dhisto(fig, dat1, dat2, xvals, yvals, ci, cmin, cmax, x1, x2, y1, y2, t
     return ax
 
 
+def plotWK(fig, dat, x, y, ci, cmin, cmax, titlestr, x1, x2, y1, y2, cmap="wk", xlim=[-15,15], ylim=[0,0.5], xlabel=True, ylabel=True, xticks=[-10,0,10], xticklabels=['-10','0','10'], yticks=[0,0.1,0.2,0.3,0.4,0.5],yticklabels=['0','0.1','0.2','0.3','0.4','0.5'], contourlines=True,contourlinescale=1):
+    """ ???? """
+    nlevs = (cmax - cmin)/ci + 1
+    clevs = np.arange(cmin, cmax+ci, ci)
+
+    import importlib
+    importlib.reload(mycolors)
+
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
+    if (cmap == "wk"):
+        mymap = mycolors.wkcmap(nlevs)
+
+    ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    if (ylabel):
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(yticklabels, fontsize=14)
+        ax.set_ylabel('Frequency (day$^{-1}$)', fontsize=14)
+    else:
+        ax.set_yticks(yticks)
+        ax.set_yticklabels([])
+
+    if (xlabel):
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xticklabels, fontsize=14)
+        ax.set_xlabel('Wavenumber', fontsize=14)
+    else:
+        ax.set_xticks(xticks)
+        ax.set_xticklabels([])
+
+    ax.set_title(titlestr, fontsize=16)
+
+
+
+
+    ax.contourf(x, y, dat, levels=clevs, cmap = mymap, extend='both')
+
+    if (contourlines):
+        clevlines = clevs*contourlinescale
+        clevlines = clevlines[np.abs(clevlines) > (ci/2.)]
+        ax.contour(x, y, dat, levels=clevlines, colors='black')
+
+    return ax
 
