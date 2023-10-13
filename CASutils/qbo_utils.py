@@ -7,7 +7,7 @@ from scipy.ndimage import label
 from math import nan
 import matplotlib.colors as colors
 
-def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None, speclevs=None):
+def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None, speclevs=None, ylabel=True):
     """
     Plots a QBO time series as a function of time and log(pressure) 
     """
@@ -39,11 +39,37 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),
                    -np.log10(3),-np.log10(1)])
     ax.set_yticklabels(['100','30','10','3','1'])
-    ax.set_ylabel('Pressure (hPa)')
+    if (ylabel):
+        ax.set_ylabel('Pressure (hPa)')
     ax.set_title(titlestr, fontsize=16)
 
 
     return ax
+
+def plotqbowinds_line(fig, data, time, titlestr, x1=None, x2=None, y1=None, y2=None, ylim=None, oplot=False, linecolor=None):
+    """
+    Plots a QBO time series as a function of time and log(pressure) 
+    """
+
+    if (~oplot):
+        if (x1):
+            ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
+        else:
+            ax = fig.add_axes()
+  
+    if (linecolor):
+        ax.plot(time, data, color=linecolor, linewidth=2)
+    else:
+        ax.plot(time, data, linewidth=2)
+
+    ax.set_title(titlestr, fontsize=16)
+
+
+    return ax
+
+
+
+
 
 def plotddamp(fig, data, pre, expname, x1=None, x2=None, y1=None, y2=None, color=None, oplot=False, ax=None):
     """ 
