@@ -228,6 +228,9 @@ def resolveWavesHayashi( varfft: xr.DataArray, nDayWin: int, spd: int ) -> xr.Da
     #      if it is an xr.DataArray, then we can just use that directly. This is 
     #      reason enough to insist on a DataArray.
     #      varfft should have a last dimension of "segments" of size N; should make a convention for the name of that dimension an insist on it here.
+
+    print('shape of varfft at beginning ',np.shape(varfft))
+
     logging.debug(f"[Hayashi] nDayWin: {nDayWin}, spd: {spd}")
     dimnames = varfft.dims
     dimvf  = varfft.shape
@@ -247,7 +250,9 @@ def resolveWavesHayashi( varfft: xr.DataArray, nDayWin: int, spd: int ) -> xr.Da
     # but we insist that the wavenumber and frequency dims are rightmost.
     # we will fill the new array in increasing order (arbitrary choice)
     logging.debug("allocate the re-ordered array")
+    print('nshape ',nshape)
     varspacetime = np.full(nshape, np.nan, dtype=type(varfft))
+    print('shape of varspacetime ',np.shape(varspacetime))
     # first two are the negative wavenumbers (westward), second two are the positive wavenumbers (eastward)
     logging.debug(f"[Hayashi] Assign values into array. Notable numbers: mlon//2={mlon//2}, N//2={N//2}")
     varspacetime[..., 0:mlon//2, 0:N//2    ] = varfft[..., mlon//2:0:-1, N//2:] # neg.k, pos.w
@@ -263,6 +268,7 @@ def resolveWavesHayashi( varfft: xr.DataArray, nDayWin: int, spd: int ) -> xr.Da
     wave      = np.arange(-mlon // 2, (mlon // 2 )+ 1, 1, dtype=int)  
     freq      = np.linspace(-1*nDayWin*spd/2, nDayWin*spd/2, (nDayWin*spd)+1) / nDayWin
 
+    print("wave is size",np.shape(wave))
     print(f"freq size is {freq.shape}.")
     odims = list(dimnames)
     odims[-2] = "wavenumber"
@@ -331,6 +337,8 @@ def spacetime_power(data, segsize=96, noverlap=60, spd=1, latitude_bounds=None, 
         
     """
 
+    print('data shape at beginning ',np.shape(data))
+
     segsize = spd*segsize
 
     if latitude_bounds is not None:
@@ -375,9 +383,12 @@ def spacetime_power(data, segsize=96, noverlap=60, spd=1, latitude_bounds=None, 
     lat_dim = data.dims.index('lat')
     if dosymmetries:
         data = decompose2SymAsym(data)
+
+    print('data shape after dosymmetries',np.shape(data))
+
     # testing: pass -- Gets the same result as NCL.
 
-    # 2. Windowing with the xarray "rolling" operation, and then limit overlap with `construct` to produce a new dataArray.
+    # 2. Windowing with the xarray "rolling" operation, and then limit overlap wiTH `CONSTruct` to produce a new dataArray.
     x_roll = data.rolling(time=segsize, min_periods=segsize)  # WK99 use 96-day window
     #x_win = x_roll.construct("segments", stride=noverlap).dropna("time")  # WK99 say "2-month" overlap
     #x_win = x_roll.construct("segments", stride=segsize-noverlap-1).dropna("time")
@@ -411,8 +422,13 @@ def spacetime_power(data, segsize=96, noverlap=60, spd=1, latitude_bounds=None, 
     # z = np.fft.fft2(x_wintap, axes=(2,3)) / (lon_size * segsize)
 
     # Or do the transform with 2 steps
+    print('data input to fft in lon',np.shape(x_wintap))
     z = np.fft.fft(x_wintap, axis=2) / lon_size  # note that np.fft.fft() produces same answers as NCL cfftf
+
+    print('shape of fft in lon',np.shape(z))
     z = np.fft.fft(z, axis=3) / segsize 
+
+    print('shape of fft in time',np.shape(z))
     # DEBUG -- compare to NCL out at this stage -- To be removed eventually.
     #
     # z_tmp_out_r = z.real
@@ -436,6 +452,9 @@ def spacetime_power(data, segsize=96, noverlap=60, spd=1, latitude_bounds=None, 
                              "lat":x_wintap["lat"],
                              "wavenumber":np.fft.fftfreq(lon_size, 1/lon_size),
                              "frequency":np.fft.fftfreq(segsize, 1/spd)})
+
+    print('shape of z ',np.shape(z))
+
     #
     # The FFT is returned following ``standard order`` which has negative frequencies in second half of array. 
     #

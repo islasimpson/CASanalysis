@@ -4,10 +4,10 @@ import sys
 from math import nan
 from CASutils import linfit_utils as linfit
 
-def bootdif2means(dat1, dat2):
+def bootdif2means(dat1, dat2, nboots=1000):
     """Obtain the significance of the difference between two means using bootstrapping """
-    dat1boot = bootgen(dat1)
-    dat2boot = bootgen(dat2)
+    dat1boot = bootgen(dat1, nboots=nboots)
+    dat2boot = bootgen(dat2, nboots=nboots)
 
     dat1bootm = dat1boot.mean('isample')
     dat2bootm = dat2boot.mean('isample')
@@ -42,12 +42,12 @@ def bootgen(darray, nsamples=None, seed=None, nboots=1000, resample=True):
     """
 
     if (~(resample) & (nsamples == None)):
-        print("You can't use nsamples == None and resample=True")
+        print("You can't use nsamples == None and resample=False")
         sys.exit()
-    else:
-        dims = darray.dims
-        if (nsamples > (darray[dims[0]].size / 2.)):
-           print("Warning, you've chosen to not resample, but also have a large sample size compared to your dataset")
+#    else:
+#        dims = darray.dims
+#        if (nsamples > (darray[dims[0]].size / 2.)):
+#           print("Warning, you've chosen to not resample, but also have a large sample size compared to your dataset")
 
 
     def resolve_duplicates(dat):
