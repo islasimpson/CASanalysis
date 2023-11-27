@@ -59,18 +59,6 @@ def cospeccalc(x1, x2, lat_bnds=None, dosymmetries=False, dosegs=False, segsize=
          f"dosegs = {dosegs} but segsize = {segsize}.")
         logging.info('exiting')
 
-    #--- Set up the output units
-#    unitsout = getunits(x1,x2,dw,dk,delw,delk)
-#    logging.info(f"Output will be in units {unitsout}")
-
-#    try:
-#        units1 = x1.units
-#        units2 = x2.units
-#    except:
-#        units1 = 'x1units'
-#        units2 = 'x2units'
-
-
     #--- Select latitude bounds for the calculation
     if lat_bnds is not None:
         assert isinstance(lat_bnds, tuple)
@@ -243,7 +231,15 @@ def cospeccalc(x1, x2, lat_bnds=None, dosymmetries=False, dosegs=False, segsize=
     #---Take the latitudinal average
     cospec_avg = latavgcospec(cospec,dosymmetries,dosegs)
 
-    return cospec, cospec_avg
+    #---Determing the output (doesn't make sense) to output cospec if dosymmetries=True
+    cospec = cospec.rename('cospec')
+    cospec_avg = cospec_avg.rename('cospec_latavg')
+    if (dosymmetries == False):
+        out = xr.merge([cospec,cospec_avg])
+    else:
+        out = cospec_avg
+
+    return out
 
 #--------------- Functions called by cospeccalc ------------
 def split_hann_taper(time4taper, ftaper):
