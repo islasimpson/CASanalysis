@@ -38,9 +38,11 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     ax.set_ylim(-np.log10(100.),-np.log10(1))
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),
                    -np.log10(3),-np.log10(1)])
-    ax.set_yticklabels(['100','30','10','3','1'])
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)')
+        ax.set_yticklabels(['100','30','10','3','1'])
+    else:
+        ax.set_yticklabels([' ',' ',' ',' ',' '])
     ax.set_title(titlestr, fontsize=16)
 
 
@@ -122,7 +124,7 @@ def finde2w(dat):
     deviations below the mean.  Then finding the time at which the winds next turn
     positive
     """
-    
+ 
     #---Find the times of the minima
     testdat = dat.where( dat < 0, 0)
     testlabel, testcount = label(testdat)
