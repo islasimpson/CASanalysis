@@ -142,7 +142,7 @@ def plotlatlogpre_100to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1
 
 
 
-def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, yticklabels=True, fsize=11, cmap='blue2red'):
+def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True, yticklabels=True, fsize=11, cmap='blue2red', xlim=None):
     """
     Plot a pressure versus latitude contour plot up to 0.01hPa.
     """
@@ -177,6 +177,8 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
         ax.set_ylabel('Pressure (hPa)', labelpad=-4)
     ax.set_title(titlestr, fontsize=fsize+2)
     ax.set_xlabel('Latitude $^{\circ}$N')
+    if xlim is not None:
+        ax.set_xlim(xlim)
 
     return ax
 
