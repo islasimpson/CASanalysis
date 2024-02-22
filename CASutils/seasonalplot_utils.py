@@ -3,7 +3,7 @@ import numpy as np
 from CASutils import colormap_utils as mycolors
 import sys
 
-def plot_pre_mon(fig, data, pre, ci, cmin, cmax, expname, x1=None, x2=None, y1=None, y2=None, oplot=False, ax=None, cmap='precip', nowhite=True, taxis='time', paxis='lev'):
+def plot_pre_mon(fig, data, pre, ci, cmin, cmax, expname, x1=None, x2=None, y1=None, y2=None, oplot=False, ax=None, cmap='precip', nowhite=True, taxis='time', paxis='lev', ylabel=True):
     """
     Plot seasonal cycle, pressure versus time.
     """
@@ -47,7 +47,7 @@ def plot_pre_mon(fig, data, pre, ci, cmin, cmax, expname, x1=None, x2=None, y1=N
 
 
     if not oplot:
-        if (x1):
+        if x1 is not None:
             ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
         else:
             ax = fig.add_axes()
@@ -55,7 +55,11 @@ def plot_pre_mon(fig, data, pre, ci, cmin, cmax, expname, x1=None, x2=None, y1=N
     ax.contourf(monticks2, -np.log10(data[paxis]), dataplot, levels=clevs, cmap=mymap, extend='max')
     ax.set_ylim(-np.log10(100),-np.log10(3))
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),-np.log10(3)])
-    ax.set_yticklabels(['100','30','10','3'])
+    if (ylabel):
+        ax.set_yticklabels(['100','30','10','3'])
+        ax.set_ylabel('Pressure (hPa)', fontsize=14)
+    else:
+        ax.set_yticklabels([' ',' ',' ',' '])
     ax.set_xlim([0,12])
     ax.tick_params(which='minor', length=0)
     ax.set_xticks(monticks)

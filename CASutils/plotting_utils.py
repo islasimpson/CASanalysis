@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import numpy as np
 from CASutils import colormap_utils as mycolors
-
+import matplotlib.colors as colors
+import warnings
+warnings.filterwarnings('ignore')
 
 def plotbox(fig, x1,x2,y1,y2, color='red', alpha=1):
     """plot a colored box"""
@@ -42,17 +44,22 @@ def plot2dhisto(fig, dat1, dat2, xvals, yvals, ci, cmin, cmax, x1, x2, y1, y2, t
     return ax
 
 
-def plotWK(fig, dat, x, y, ci, cmin, cmax, titlestr, x1, x2, y1, y2, cmap="wk", xlim=[-15,15], ylim=[0,0.5], xlabel=True, ylabel=True, xticks=[-10,0,10], xticklabels=['-10','0','10'], yticks=[0,0.1,0.2,0.3,0.4,0.5],yticklabels=['0','0.1','0.2','0.3','0.4','0.5'], contourlines=True,contourlinescale=1):
+def plotWK(fig, dat, x, y, ci, cmin, cmax, titlestr, x1, x2, y1, y2, cmap="wk", xlim=[-15,15], ylim=[0,0.5], xlabel=True, ylabel=True, xticks=[-10,0,10], xticklabels=['-10','0','10'], yticks=[0,0.1,0.2,0.3,0.4,0.5],yticklabels=['0','0.1','0.2','0.3','0.4','0.5'], contourlines=True,contourlinescale=1, speclevs=None, posonly=False):
     """ ???? """
-    nlevs = (cmax - cmin)/ci + 1
-    clevs = np.arange(cmin, cmax+ci, ci)
+
+    if (speclevs is None):
+        nlevs = (cmax - cmin)/ci + 1
+        clevs = np.arange(cmin, cmax+ci, ci)
+    else:
+        clevs = speclevs
+        nlevs = np.size(clevs)
 
     import importlib
     importlib.reload(mycolors)
 
 
     if (cmap == "blue2red"):
-        mymap = mycolors.blue2red_cmap(nlevs)
+        mymap = mycolors.blue2red_cmap(nlevs, posonly=posonly)
     if (cmap == "precip"):
         mymap = mycolors.precip_cmap(nlevs)
     if (cmap == "wk"):
@@ -79,15 +86,27 @@ def plotWK(fig, dat, x, y, ci, cmin, cmax, titlestr, x1, x2, y1, y2, cmap="wk", 
 
     ax.set_title(titlestr, fontsize=16)
 
-
-
-
-    ax.contourf(x, y, dat, levels=clevs, cmap = mymap, extend='both')
+    if (speclevs is not None):
+        norm = colors.BoundaryNorm(boundaries=clevs, ncolors=256)
+        ax.contourf(x,y,dat,levels=clevs,cmap=mymap,extend='both', norm=norm)
+    else:
+        ax.contourf(x, y, dat, levels=clevs, cmap = mymap, extend='both')
 
     if (contourlines):
-        clevlines = clevs*contourlinescale
-        clevlines = clevlines[np.abs(clevlines) > (ci/2.)]
-        ax.contour(x, y, dat, levels=clevlines, colors='black')
+        if (speclevs is None):
+            clevlines = clevs*contourlinescale
+            clevlines = clevlines[np.abs(clevlines) > (ci/2.)]
+        else:
+            clevlines = clevs
+        if (posonly):
+            ax.contour(x, y, dat, levels=clevlines[1:len(clevlines)+1], colors='black', linestyles='solid')
+        else:
+            ax.contour(x, y, dat, levels=clevlines, colors='black')
+
+
+    kmidpos = np.min(dat.k.values[dat.k > 0])
+    kmidneg = np.max(dat.k.values[dat.k < 0])
+    ax.fill_between([kmidneg,kmidpos],[ylim[0],ylim[0]],[ylim[1],ylim[1]], color='lightgray')
 
     return ax
 

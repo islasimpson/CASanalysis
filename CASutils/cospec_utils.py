@@ -228,8 +228,11 @@ def cospeccalc(x1, x2, lat_bnds=None, dosymmetries=False, dosegs=False, segsize=
     #---Assign units
     cospec = cospec.assign_attrs({'units':unitsout})
 
+    print(cospec)
+
     #---Take the latitudinal average
     cospec_avg = latavgcospec(cospec,dosymmetries,dosegs)
+    cospec_avg = cospec_avg.assign_attrs({'units':unitsout})
 
     #---Determing the output (doesn't make sense) to output cospec if dosymmetries=True
     cospec = cospec.rename('cospec')

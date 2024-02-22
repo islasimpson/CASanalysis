@@ -168,14 +168,14 @@ def bootgen_multimem(darray, nmems, seed=None, nboots=1000):
     bootdat = np.array(darray[ranu])
     bootdat = bootdat.reshape(dimboot2d)
     bootdatm = np.mean(bootdat, axis=0)
-    bootdatxr = xr.DataArray(bootdatm, coords=bootcoords)
-
+    bootdatxr = xr.DataArray(bootdatm, 
+                  coords={bootcoords[i][0]: bootcoords[i][1] for i in np.arange(0,len(bootcoords),1)})
 
     return bootdatxr
 
 
 
-def bootgenchunk_multimem(darray, nyears, nmems, nboots, seed=None):
+def bootgenchunk_multimem(darray, nyears, nmems, nboots=1000, seed=None):
     """Generate nboot samples with nmems members containing chunks of length nyears"""
 
     ### exit if darray is a dataset.
