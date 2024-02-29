@@ -3,7 +3,7 @@ from matplotlib.colors import ListedColormap ## used to create custom colormaps
 import matplotlib.colors as mcolors
 import numpy as np
 
-def blue2red_cmap(n, nowhite = False):
+def blue2red_cmap(n, nowhite = False, posonly=False):
     """ combine two existing color maps to create a diverging color map with white in the middle
     n = the number of contour intervals
     """
@@ -21,11 +21,16 @@ def blue2red_cmap(n, nowhite = False):
     if (nowhite):
         nwhite=0
 
-    colors1 = plt.cm.Blues_r(np.linspace(0,1, int(nneg)))
-    colors2 = plt.cm.YlOrRd(np.linspace(0,1, int(npos)))
-    colorsw = np.ones((nwhite,4))
+    if (posonly):
+        colorsw = np.ones((nwhite,4))
+        colors2 = plt.cm.YlOrRd(np.linspace(0,1,int(n)))
+        colors = np.vstack((colorsw,colors2))
+    else:
+        colors1 = plt.cm.Blues_r(np.linspace(0,1, int(nneg)))
+        colors2 = plt.cm.YlOrRd(np.linspace(0,1, int(npos)))
+        colorsw = np.ones((nwhite,4))
+        colors = np.vstack((colors1, colorsw, colors2))
 
-    colors = np.vstack((colors1, colorsw, colors2))
     mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
     return mymap 
