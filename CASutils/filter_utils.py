@@ -2,6 +2,8 @@ import numpy as np
 from scipy.fft import fft, ifft
 import xarray as xr
 import sys
+import logging
+logging.basicConfig(level=logging.INFO)
 
 def filterk(darray, kmin, kmax, dimlon=0):
     """filter a field based on zonal wavenumber.  Include wavenumbers kmin to kmax"""
@@ -258,3 +260,68 @@ def wkfilter_flux(x1, x2, ftaper, spd=1):
 
     flux = xr.merge([fluxe, fluxw])
     return flux
+
+def flanczos(dat, delt, nw, pcoff, frequency=None):
+    """
+    Filter data using a lanczos filter
+    Inputs:
+        dat=the data you want to filter (must have axis "time")
+        delt=the timestep in the same units as period
+        nw=the number of weights to be used (should be an odd number)
+        pcoff=the cut of period 
+        frequency (optional)=output frequency for response function
+
+    Output: datout which contains
+        datlow=low pass filtered data
+        dathigh = high pass filtered data
+        response = response function
+
+    Warning: hasn't been extensively tested for delt!=1, but I think it works
+    """
+    
+    fcoff=(1/pcoff)*delt # cut of frequency in units of delt
+
+    # check that the cutoff frequency is less than the nyquist frequency
+    if ( fcoff > 0.5 ):
+        logging.info("Cut of frequency {fcoff/delt} is greater than nyquist")
+        sys.exit()
+
+    # compute the lanczos weights
+    n=int((nw-1)/2)
+    k=np.arange(1,n)
+    w=np.zeros([nw])
+    w[n]=2*fcoff
+    whalf=(np.sin(2. * np.pi * fcoff * k) / (np.pi * k))*(np.sin(np.pi * k / n) * n / (np.pi * k))
+    w[n-1:0:-1]=whalf
+    w[n+1:-1]=whalf
+    w=xr.DataArray(w,dims=['window'])
+
+    # compute the response function
+    if frequency is None:
+        frequency=np.arange(0,0.5,0.01)
+    fdelt=frequency*delt # frequency in units of delt
+    r=[ (w[n] + 2*np.sum(whalf[0:n]*np.cos(k[0:n]*i*2*np.pi))) for i in fdelt ]
+    r = xr.DataArray(r, dims=['frequency'], coords=[frequency], name='response')
+
+    # low pass filtered data
+    datlow = dat.rolling(time=len(w), center=True).construct('window').dot(w)
+
+    # high pass filtered data
+    dathigh = dat - datlow
+
+    datlow = datlow.rename('lowf')
+    dathigh = dathigh.rename('highf')
+
+    datout = xr.merge([datlow, dathigh, r])
+    return datout,w
+
+
+ 
+
+
+
+
+
+
+
+
