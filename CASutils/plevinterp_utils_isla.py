@@ -304,8 +304,7 @@ def _vertical_remap_extrap(new_levels, lev_dim, data, output, pressure, ps,
 #                lev <= p_sfc, output.sel(plev=lev),
 #                _temp_extrapolate(data, lev_dim, lev, p_sfc, ps, phi_sfc))
     sfc_index = pressure[lev_dim].argmax()  # index of the model surface
-￼   p_sfc = pressure.isel({lev_dim: sfc_index},
-￼                          drop=True)  # extract pressure at lowest level
+    p_sfc = pressure.isel({lev_dim: sfc_index}, drop=True) # extract pressure at lowest level
 
     if variable == 'temperature':
         output = output.where( output.plev <= p_sfc,
