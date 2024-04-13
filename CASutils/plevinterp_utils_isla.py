@@ -296,7 +296,7 @@ def _vertical_remap_extrap(new_levels, lev_dim, data, output, pressure, ps,
 
 #    sfc_index = pressure[plev_name].argmax().data  # index of the model surface
 #    p_sfc = pressure.isel(**dict({plev_name: sfc_index
-                                 }))  # extract pressure at lowest level
+#                                 }))  # extract pressure at lowest level
 
 #    if variable == 'temperature':
 #        for lev in new_levels:
