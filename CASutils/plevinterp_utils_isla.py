@@ -322,9 +322,9 @@ def _vertical_remap_extrap(new_levels, lev_dim, data, output, pressure, ps,
 #            output.loc[dict(plev=lev)] = xr.where(
 #                lev <= p_sfc, output.sel(plev=lev),
 #                data.isel(**dict({plev_name: sfc_index})))
-        output = output.where(
-          output.plev <= p_sfc, output.sel(plev=lev),
-              data.isel(**dict({lev_dim: sfc_index})))
+        output = output.where(output.plev <= p_sfc,
+                    data.isel({lev_dim: sfc_index}, drop=True))
+
 
     return output
 
