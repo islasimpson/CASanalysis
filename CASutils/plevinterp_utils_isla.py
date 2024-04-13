@@ -171,7 +171,8 @@ def _temp_extrapolate(data, lev_dim, lev, p_sfc, ps, phi_sfc):
     g_inv = 1 / 9.80616  # inverse of gravity
     alpha = 0.0065 * R_d * g_inv
 
-    tstar = data.isel(**{lev_dim: -1}) * (1 + alpha * (ps / p_sfc - 1))
+    #tstar = data.isel(**{lev_dim: -1}) * (1 + alpha * (ps / p_sfc - 1))
+    tstar = data.isel({lev_dim: -1}, drop=True) * (1 + alpha * (ps / p_sfc - 1))
 
     hgt = phi_sfc * g_inv
     t0 = tstar + 0.0065 * hgt
@@ -293,26 +294,39 @@ def _vertical_remap_extrap(new_levels, lev_dim, data, output, pressure, ps,
         plev_name = pressure.cf[lev_dim].name
 
 
-    sfc_index = pressure[plev_name].argmax().data  # index of the model surface
-    p_sfc = pressure.isel(**dict({plev_name: sfc_index
+#    sfc_index = pressure[plev_name].argmax().data  # index of the model surface
+#    p_sfc = pressure.isel(**dict({plev_name: sfc_index
                                  }))  # extract pressure at lowest level
 
-    if variable == 'temperature':
-        for lev in new_levels:
-            output.loc[dict(plev=lev)] = xr.where(
-                lev <= p_sfc, output.sel(plev=lev),
-                _temp_extrapolate(data, lev_dim, lev, p_sfc, ps, phi_sfc))
+#    if variable == 'temperature':
+#        for lev in new_levels:
+#            output.loc[dict(plev=lev)] = xr.where(
+#                lev <= p_sfc, output.sel(plev=lev),
+#                _temp_extrapolate(data, lev_dim, lev, p_sfc, ps, phi_sfc))
+    sfc_index = pressure[lev_dim].argmax()  # index of the model surface
+￼   p_sfc = pressure.isel({lev_dim: sfc_index},
+￼                          drop=True)  # extract pressure at lowest level
 
+    if variable == 'temperature':
+        output = output.where( output.plev <= p_sfc,
+              _temp_extrapolate(data, lev_dim, output.plev, p_sfc, ps, phi_sfc))
     elif variable == 'geopotential':
-        for lev in new_levels:
-            output.loc[dict(plev=lev)] = xr.where(
-                lev <= p_sfc, output.sel(plev=lev),
-                _geo_height_extrapolate(t_bot, lev, p_sfc, ps, phi_sfc))
+#        for lev in new_levels:
+#            output.loc[dict(plev=lev)] = xr.where(
+#                lev <= p_sfc, output.sel(plev=lev),
+#                _geo_height_extrapolate(t_bot, lev, p_sfc, ps, phi_sfc))
+        output = output.where(
+          output.plev <= p_sfc, 
+            _geo_height_extrapolate(t_bot, output.plev, p_sfc, ps, phi_sfc))
     else:
-        for lev in new_levels:
-            output.loc[dict(plev=lev)] = xr.where(
-                lev <= p_sfc, output.sel(plev=lev),
-                data.isel(**dict({plev_name: sfc_index})))
+#        for lev in new_levels:
+#            output.loc[dict(plev=lev)] = xr.where(
+#                lev <= p_sfc, output.sel(plev=lev),
+#                data.isel(**dict({plev_name: sfc_index})))
+        output = output.where(
+          output.plev <= p_sfc, output.sel(plev=lev),
+              data.isel(**dict({lev_dim: sfc_index})))
+
     return output
 
 
