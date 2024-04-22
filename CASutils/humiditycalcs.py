@@ -24,3 +24,14 @@ def calcsvp(TK):
     e = 6.112*np.exp( (17.67*T)/(T + 243.5))
     e = e.rename('svp')
     return e
+
+# -----------------calculate the saturation specific humidity from temperature and pressure
+#                  (or specific humidity from dew point temperature)
+#  Based on Bolton (1980) The computation of equivalent potential temperature, MWR
+def calcsq(TK, PS):
+    """calculate the saturation specific humidity (in kg/kg) from T (in K) and PS (in Pa)"""
+    T = TK-273.15
+    e = 6.112*np.exp( (17.67*T)/(T + 243.5))
+    q = (0.622*e)/(PS/100. - (0.378*e))
+    q = q.rename('sq')
+    return q
