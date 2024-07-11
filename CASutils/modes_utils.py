@@ -10,7 +10,7 @@ def calcAMV(sst):
     """
     natl = avg.cosweightlonlat(sst,280,360,0,60)
     glob = avg.cosweightlonlat(sst,0,360,-60,60)
-    amv = natl/glob
+    amv = natl - glob
     return amv
 
 def calcAMOC(MOC, lat=26.5):
