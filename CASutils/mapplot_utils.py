@@ -814,7 +814,8 @@ def contourmap_northamerica_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titl
 
 
 def contourmap_northatlantic_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", maskocean=False, contourlines=False, contourlinescale=1):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", maskocean=False, contourlines=False, contourlinescale=1,
+ signifdat=None, stipplesignif=False):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -860,6 +861,19 @@ def contourmap_northatlantic_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titles
 
     dat, lon = add_cyclic_point(dat, coord=lon)
     ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend='both')
+
+    if (signifdat is not None):
+        lonsignif = signifdat.lon
+        signifdat, lonsignif = add_cyclic_point(signifdat, coord=lonsignif)
+        if (stipplesignif):
+            density=3
+            ax.contourf(lonsignif,lat,signifdat,levels=[0,0.5,1], colors='none',
+                 hatches=[density*'.',density*'.',density*','],
+                 transform=ccrs.PlateCarree())
+        else:
+            ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray',
+                        transform = ccrs.PlateCarree())
+
 
     if (contourlines):
         clevs = clevs[clevs != 0]
