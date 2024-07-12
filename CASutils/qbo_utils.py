@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from dycoreutils import colormap_utils as mycolors
+from CASutils import colormap_utils as mycolors
 import sys
 from scipy.ndimage import label
 from math import nan
