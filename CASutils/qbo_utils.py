@@ -7,7 +7,7 @@ from scipy.ndimage import label
 from math import nan
 import matplotlib.colors as colors
 
-def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None, speclevs=None, ylabel=True):
+def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=None, y1=None, y2=None, plevvar='ilev', ylim=None, speclevs=None, ylabel=True, contourlines=False, contourlinescale=1, xlabel=None, fsize=12):
     """
     Plots a QBO time series as a function of time and log(pressure) 
     """
@@ -23,7 +23,7 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
         clevs = np.arange(cmin, cmax+ci, ci)
     mymap = mycolors.blue2red_cmap(nlevs)
 
-    plt.rcParams['font.size'] = '12'
+    plt.rcParams['font.size'] = fsize 
 
     if (x1):
         ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
@@ -35,14 +35,31 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
         ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both', norm=norm)
     else:
         ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both')
-    ax.set_ylim(-np.log10(100.),-np.log10(1))
+
+    if (contourlines):
+        clevs_lines = np.array(clevs)
+        test = np.arange(0,len(clevs_lines),1) - len(clevs)/2 + 0.5
+        clevs_lines = clevs_lines[ test != 0 ]
+        test = test[ test != 0]
+        test2 = (test/2.).astype(int)
+        #print(test)
+        #print(clevs_lines)
+        clevs_lines = clevs_lines[ test2*2 == test ]
+        ax.contour(time, -1.*np.log10(pre), data, levels=clevs_lines, colors='black')
+
+
+    ax.set_ylim(-np.log10(100.),-np.log10(3))
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),
-                   -np.log10(3),-np.log10(1)])
+                   -np.log10(3)])
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)')
-        ax.set_yticklabels(['100','30','10','3','1'])
+        ax.set_yticklabels(['100','30','10','3'])
     else:
-        ax.set_yticklabels([' ',' ',' ',' ',' '])
+        ax.set_yticklabels([' ',' ',' ',' '])
+
+    if (xlabel):
+        ax.set_xlabel(xlabel)
+
     ax.set_title(titlestr, fontsize=16)
 
 
