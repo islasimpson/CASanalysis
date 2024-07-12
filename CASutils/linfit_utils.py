@@ -45,7 +45,7 @@ def linfit_xy(x,y, sigma=None):
 
 def reg_latlon(x,y):
    y2 = y.stack(z=("lat","lon"))
-   a, b = linfit.linfit_xy(x, y2)
+   a, b = linfit_xy(x, y2)
    a = np.reshape(a, [y.lat.size, y.lon.size])
    b = np.reshape(b, [y.lat.size, y.lon.size])
    a_xr = xr.DataArray(a, coords=[y.lat, y.lon], dims=['lat','lon'], name='a')
