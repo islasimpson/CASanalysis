@@ -71,7 +71,7 @@ def oplotlinetime_j2d_monthly(ax, data, linecolor=None, linewidth=1, linestyle='
     dataplot[1:13] = data
     dataplot[13] = data[0]
 
-    if (linecolor[0]):
+    if linecolor is not None:
 #        ax.plot(np.arange(0,14,1)-0.5,dataplot,color=linecolor, linewidth=linewidth, label=label)
         ax.plot(np.arange(0,14,1)-0.5,dataplot,color=linecolor, linewidth=linewidth, label=label,
                       linestyle=linestyle)
