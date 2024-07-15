@@ -124,7 +124,7 @@ def oplotlinetime_j2j_fill(ax, minvaltemp, maxvaltemp, color='black', label=None
 
 
 def plotlinetime_j2j_monthly(fig, datatemp, x1, x2, y1, y2, titlestr, yrange=None, fsize=11, 
-    yticks=None, yticklabels=None, ytitle=None, linecolor=None, linewidth=1, linestyle='solid', points=True, label=None, linestyle='solid'):
+    yticks=None, yticklabels=None, ytitle=None, linecolor=None, linewidth=1, points=True, label=None, linestyle='solid'):
     """ plot a line plot using monthly data from Jan to Dec
         Input: fig = your figure 
            data = a 365 element array containing data to be plotted
