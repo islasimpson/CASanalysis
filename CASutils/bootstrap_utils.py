@@ -233,10 +233,20 @@ def bootgenchunk_multimem(darray, nyears, nmems, nboots=1000, seed=None):
 #    print(bootcoords)
 
 
-    try:
-        bootdat = xr.DataArray(bootdat, coords=bootcoords)
-    except:
-        pass
+#    try:
+##        bootdat = xr.DataArray(bootdat, coords=bootcoords)
+#        bootdat = xr.DataArray(bootdat, 
+#                  coords=[bootcoords[i][1] for i in np.arange(0,len(bootcoords),1)],
+#                  dims=[bootcoords[i][0] for i in np.arange(0,len(bootcoords),1)])
+#
+#    except:
+#        pass
+
+    bootdat = xr.DataArray(bootdat,
+                  coords=[bootcoords[i][1] for i in np.arange(0,len(bootcoords),1)],
+                  dims=[bootcoords[i][0] for i in np.arange(0,len(bootcoords),1)])
+
+
 
     return bootdat
 

@@ -3,7 +3,8 @@ import numpy as np
 from CASutils import colormap_utils as mycolors
 import sys
 
-def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, ylabel=True):
+def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, 
+ylabel=True,yticklabels=False,fsize=14):
     """
      Plot a pressure versus latitude contour plot between 100 and 1 hPa on a log p scale
     """
@@ -12,7 +13,7 @@ def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, 
     clevs = np.arange(cmin, cmax+ci, ci)
     mymap = mycolors.blue2red_cmap(nlevs)
 
-    plt.rcParams['font.size'] = '11'
+    plt.rcParams['font.size'] = str(fsize) 
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
 
@@ -20,7 +21,10 @@ def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, 
     ax.contour(lat,-1.*np.log10(pre), data, levels=clevs[ clevs != 0], colors='black', linewidths=0.5)
     ax.set_ylim(-np.log10(100.),-np.log10(1))
     ax.set_yticks([-np.log10(100),-np.log10(30),-np.log10(10),-np.log10(3),-np.log10(1)])
-    ax.set_yticklabels(['100','30','10','3','1'])
+    if (yticklabels):
+        ax.set_yticklabels(['100','30','10','3','1'])
+    else:
+        ax.set_yticklabels([' ',' ',' ',' ',' '])
     if (ylabel):
         ax.set_ylabel('Pressure (hPa)', labelpad=-4)
     ax.set_title(titlestr, fontsize=16)

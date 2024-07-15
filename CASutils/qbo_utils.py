@@ -23,7 +23,7 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
         clevs = np.arange(cmin, cmax+ci, ci)
     mymap = mycolors.blue2red_cmap(nlevs)
 
-    plt.rcParams['font.size'] = fsize 
+    plt.rcParams['font.size'] = str(fsize) 
 
     if (x1):
         ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
@@ -33,19 +33,24 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     if (speclevs):
         norm = colors.BoundaryNorm(boundaries=clevs, ncolors=256)
         ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both', norm=norm)
+
+        if (contourlines):
+            clevs_lines = np.array(clevs)
+            test = np.arange(0,len(clevs_lines),1) - len(clevs)/2 + 0.5
+            clevs_lines = clevs_lines[ clevs_lines != 0 ]
+            test = test[ test != 0 ]
+            test2 = (test/2.).astype(int)
+            clevs_lines = clevs_lines[ test2*2 == test ]
+            ax.contour(time,-1.*np.log10(pre),data,levels=clevs_lines,colors='black')
+
     else:
         ax.contourf(time,-1.*np.log10(pre),data, levels=clevs, cmap=mymap, extend='both')
 
-    if (contourlines):
-        clevs_lines = np.array(clevs)
-        test = np.arange(0,len(clevs_lines),1) - len(clevs)/2 + 0.5
-        clevs_lines = clevs_lines[ test != 0 ]
-        test = test[ test != 0]
-        test2 = (test/2.).astype(int)
-        #print(test)
-        #print(clevs_lines)
-        clevs_lines = clevs_lines[ test2*2 == test ]
-        ax.contour(time, -1.*np.log10(pre), data, levels=clevs_lines, colors='black')
+        if (contourlines):
+            clevs_lines = clevs*contourlinescale
+            clevs_lines = clevs_lines[np.abs(clevs_lines) > ci/2]
+            ax.contour(time,-1.*np.log10(pre), data, levels=clevs_lines, colors='black')
+
 
 
     ax.set_ylim(-np.log10(100.),-np.log10(3))
@@ -60,7 +65,7 @@ def plotqbowinds(fig, data, time, pre, ci, cmin, cmax, titlestr, x1=None, x2=Non
     if (xlabel):
         ax.set_xlabel(xlabel)
 
-    ax.set_title(titlestr, fontsize=16)
+    ax.set_title(titlestr, fontsize=fsize+2)
 
 
     return ax
@@ -185,9 +190,90 @@ def finde2w(dat):
             timeanoms = np.where( timeanoms > 0)
             transition_time[i] = minpostime[np.argmin(np.abs(minpostime) - eastpeak_time[i])]
    
-    transition_time = transition_time[~np.isnan(transition_time)]
+    ewloc = transition_time[~np.isnan(transition_time)]
 
-    return transition_time
+
+
+    #----Now find the westterly to easterly transition times
+
+    dat = -1.*dat
+    #---Find the times of the maxima
+    testdat = dat.where( dat < 0, 0)
+    testlabel, testcount = label(testdat)
+    nmins = testcount
+    eastpeak_time = np.zeros([nmins])
+    eastpeak_mag = np.zeros([nmins])
+    for i in np.arange(0,nmins,1):
+        imin = int(np.argmin(np.where( testlabel == i+1, dat, 1000)))
+        eastpeak_time[i] = imin
+        eastpeak_mag[i] = dat[imin].values
+
+    #---Make sure the minimum wind values are more than 0.5 standard deviations
+    #   below the mean.
+    testval = (np.mean(dat) - 0.5*np.std(dat)).values
+    eastpeak_time = eastpeak_time[ eastpeak_mag < testval ] 
+    eastpeak_mag = eastpeak_mag[ eastpeak_mag < testval ]
+
+    #---Double checking we don't have any peaks that are below 1/3 of the magnitude of the maximum
+    maxmageastpeak = np.min(eastpeak_mag)
+    eastpeak_time = eastpeak_time[ eastpeak_mag < maxmageastpeak/3. ]
+    eastpeak_mag = eastpeak_mag[ eastpeak_mag < maxmageastpeak/3. ]
+
+    #---Now find the transition month to westerlies
+    times = np.arange(0,testdat.size,1)
+    testdat = dat.where( dat > 0, 0)
+    testlabel, testcount = label(testdat)
+    
+    #find the minimum of each positive label
+    minpostime = np.zeros([testcount])
+    for i in np.arange(1,testcount+1,1):
+        timestest = times[( testlabel == i) ]
+        minpostime[i-1] = np.min(timestest)
+
+    transition_time = np.zeros([len(eastpeak_time)])
+    for i in np.arange(0,len(eastpeak_time),1):
+        timeanoms = minpostime - eastpeak_time[i]
+        if (max(timeanoms) < 0):
+            transition_time[i] = nan
+        else:
+            minpostime = minpostime[timeanoms > 0]
+            timeanoms = np.where( timeanoms > 0)
+            transition_time[i] = minpostime[np.argmin(np.abs(minpostime) - eastpeak_time[i])]
+   
+    weloc = transition_time[~np.isnan(transition_time)]
+
+
+    #---logic to deal with the situation when there's more transitions of one type than another
+    #---only works when there's more w-e transitions right now
+    
+    if (weloc[0] < ewloc[0]):
+        print('weloc first')
+        idrop=[]
+        for i in np.arange(1,len(weloc),1):
+            dif_we = weloc[i] - weloc[i-1]
+            dif_ew = weloc[i] - ewloc
+            dif_ew = dif_ew[dif_ew > 0]
+            dif_ew = np.min(dif_ew)
+            if (dif_we < dif_ew): # drop the prior w-e
+                idrop.append(i-1)
+        weloc = np.delete(weloc,idrop)
+    else:
+        print('ewloc first')
+        idrop=[]
+        for i in np.arange(0,len(weloc)-1,1):
+            dif_we = weloc[i+1] - weloc[i]
+            dif_ew = ewloc - weloc[i]
+            dif_ew = dif_ew[dif_ew > 0]
+            dif_ew = np.min(dif_ew)
+            if (dif_we < dif_ew): # drop the current w-e
+                idrop.append(i)
+        weloc = np.delete(weloc,idrop) 
+
+    print(idrop)
+
+
+
+    return ewloc, weloc 
 
 
 

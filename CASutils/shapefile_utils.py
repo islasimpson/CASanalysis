@@ -5,6 +5,8 @@ import shapefile as shp
 import geopandas as gp
 import regionmask
 from numpy import nan
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 
 def maskgen(shpfile, dat4mask, regionname):
     """ Generate a mask using information from a shapefile.  Mask will have 1's 
@@ -43,3 +45,17 @@ def maskgen(shpfile, dat4mask, regionname):
 
     return mask
 
+def plotlower48(ax, shpfile, dat4mask, color='red'):
+    shp = gp.read_file(shpfile)
+    maskcoords = xr.Dataset({'lat' : (['lat'],dat4mask['lat'].values)}, {'lon' : (['lon'],dat4mask['lon'].values)})
+    for istat in np.arange(0,len(shp.NAME_1)):
+        print(shp.NAME_1[istat])
+        region = shp[shp.NAME_1 == shp.NAME_1[istat]]
+        mask = regionmask.mask_geopandas(region, maskcoords["lon"], maskcoords["lat"])
+        mask = np.where(np.isnan(mask),0,1)
+        mask = xr.DataArray(mask, coords=maskcoords.coords)
+
+        ax = plt.contour(mask.lon, mask.lat, np.nan_to_num(mask), levels=[0,1], colors=color, 
+               linewidth=2, transform=ccrs.PlateCarree())
+
+    return ax

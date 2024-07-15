@@ -62,7 +62,7 @@ def red2blue_cmap(n, nowhite = False):
         colors = np.vstack((colors1, colorsw, colors2))
     mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
   
-    return mymap
+    return mymap 
 
 
 
@@ -138,5 +138,14 @@ def wkcmap(n, nwhite=2):
 
     return mymap
 
+    colorsw = np.ones((nwhite,4))
+    colors1 = plt.cm.YlOrBr(np.linspace(0,0.4,nc1))
+    colors2 = plt.cm.YlOrBr(np.linspace(0.44,0.7,nc2))
+    colors3 = plt.cm.afmhot_r(np.linspace(0.6,0.8,nc3))
+    colors4 = plt.cm.gist_heat_r(np.linspace(0.75,1,nc4))
 
+    #colors = np.vstack((colorsw, colors1 + colors3 + colors4))
+    colors = np.vstack((colorsw, colors1, colors2, colors3, colors4))
+    mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
+    return mymap

@@ -106,7 +106,7 @@ def plotWK(fig, dat, x, y, ci, cmin, cmax, titlestr, x1, x2, y1, y2, cmap="wk", 
 
     kmidpos = np.min(dat.k.values[dat.k > 0])
     kmidneg = np.max(dat.k.values[dat.k < 0])
-    ax.fill_between([kmidneg,kmidpos],[ylim[0],ylim[0]],[ylim[1],ylim[1]], color='lightgray')
+    ax.fill_between([kmidneg,kmidpos],[ylim[0],ylim[0]],[ylim[1],ylim[1]], color='lightgray',zorder=500)
 
     return ax
 

@@ -235,6 +235,153 @@ def wkfilter(dat, ftaper, kmin, kmax, pmin, pmax, spd=1):
 
     return izselect
 
+def wkfilter_flux(dat1, dat2, ftaper, kmin = None, kmax = None, pmin = None, pmax = None, spd=1):
+    """
+    dat1 = an xarray DataArray with dimensions time and lon and whatever other dimensions you like
+    dat2 = as dat1
+    the output will be the filtered flux dat1*dat2
+    kmin = the minimum wavenumber included in the output
+    kmax = the maximum wavenumber included in the output
+    pmin = the minimum period (in days) included in the output
+    pmax = the maximum period (in days) included in the output
+    spd = the number of time stamps per day
+
+    Negative wavenumbers = westward propagating
+    Positive wavenumbers = eastward propagating
+
+    Only use positive frequencies as the FFT coefficients are multiplied by 2 before inverting 
+    """
+
+    #---Convert min/max period to min/max frequency
+    if ((pmax is not None) & (pmin is not None)):
+        fmin = 1./pmax ; fmax = 1./pmin
+        assert ( (pmin >= 0) & (pmin >= 0)), f"Error, you can't choose negative periods/frequencies"
+
+    #---Find the dimensions other than lon and time 
+    dims = np.array(dat1.dims)
+    coords = dat1.coords
+
+    #---Check the dataset has the required dimensions and that only positive frequencies are used
+    assert (dims == 'time')[ ~((dims == 'time') == False) ][0] == True, f"Error, you need to have a time dimension"
+    assert (dims == 'lon')[ ~((dims == 'lon') == False) ][0] == True, f"Error, you need to have a lon dimension"
+
+    #---Taper the time series
+    npts = int(np.rint(ftaper*dat1.time.size))
+    endtaper = np.hanning(npts)
+    taper = np.ones(dat1.time.size)
+    taper[0:npts//2+1] = endtaper[0:npts//2+1]
+    taper[-npts//2+1:] = endtaper[npts//2+1:]
+    taper = xr.DataArray(taper, coords=[dat1.time], dims=['time'], name='taper')
+    dat1_tp = taper*dat1
+    dat2_tp = taper*dat2
+
+    #---Dot he FFTs and organize the dimensions
+    londim = dat1_tp.dims.index('lon')
+    timedim = dat1_tp.dims.index('time')
+
+    dat1fft = np.fft.fft(dat1_tp, axis=londim) / dat1_tp.lon.size
+    dat1fft = np.fft.fft(dat1fft, axis=timedim) / dat1_tp.time.size
+
+    dat2fft = np.fft.fft(dat2_tp, axis=londim) / dat2_tp.lon.size
+    dat2fft = np.fft.fft(dat2fft, axis=timedim) / dat2_tp.time.size
+
+    dimsfft = []
+    coordsfft = []
+    for i in np.arange(0,len(dims),1):
+        if (dims[i] == 'time'):
+            dimsfft.append('frequency')
+            frequency = xr.DataArray(np.fft.fftfreq(dat1.time.size, 1./spd), dims=['frequency'])
+            coordsfft.append(frequency)
+        elif (dims[i] == 'lon'):
+            dimsfft.append('wavenumber')
+            wavenumber = xr.DataArray(-1.*np.fft.fftfreq(dat1.lon.size, 1./dat1.lon.size), dims=['wavenumber'])
+            coordsfft.append(wavenumber)
+        else:
+            dimsfft.append(dims[i])
+            coordsfft.append(coords[dims[i]])
+
+    dat1fft = xr.DataArray(dat1fft, dims=dimsfft, coords=coordsfft)
+    dat2fft = xr.DataArray(dat2fft, dims=dimsfft, coords=coordsfft)
+
+    if ( ( kmin is None ) | (kmax is None) | (pmin is None) | (pmax is None) ):
+        print('Decomposing into easterly and westerly because not all of kmin, kmax, pmin, pmax were specified')
+        dat1_e = dat1fft.where( (( dat1fft.wavenumber >= 1) & (dat1fft.wavenumber <= np.max(dat1fft.wavenumber))), 0)
+        dat1_e = dat1_e.where( (dat1_e.frequency >= 0) & (dat1_e.frequency <= np.max(dat1_e.frequency)),0)
+        
+        dat2_e = dat2fft.where( (( dat2fft.wavenumber >= 1) & (dat2fft.wavenumber <= np.max(dat2fft.wavenumber))), 0)
+        dat2_e = dat2_e.where( (dat2_e.frequency >= 0) & (dat2_e.frequency <= np.max(dat2_e.frequency)),0)
+        
+        dat1_w = dat1fft.where( (( dat1fft.wavenumber >= np.min(dat1fft.wavenumber)) & (dat1fft.wavenumber <= -1)), 0)
+        dat1_w = dat1_w.where( (dat1_w.frequency >= 0) & (dat1_w.frequency <= np.max(dat1_w.frequency)),0)
+        
+        dat2_w = dat2fft.where( (( dat2fft.wavenumber >= np.min(dat2fft.wavenumber)) & (dat2fft.wavenumber <= -1)), 0)
+        dat2_w = dat2_w.where( (dat2_w.frequency >= 0) & (dat2_w.frequency <= np.max(dat2_w.frequency)),0)
+        
+        idat1_e = np.fft.ifft(dat1_e, axis=timedim)*dat1_e.frequency.size
+        idat1_e = np.fft.ifft(idat1_e, axis=londim)*dat1_e.wavenumber.size
+        idat1_e = 2*np.real(idat1_e)
+        
+        idat2_e = np.fft.ifft(dat2_e, axis=timedim)*dat2_e.frequency.size
+        idat2_e = np.fft.ifft(idat2_e, axis=londim)*dat2_e.wavenumber.size
+        idat2_e = 2*np.real(idat2_e)
+        
+        idat1_w = np.fft.ifft(dat1_w, axis=timedim)*dat1_w.frequency.size
+        idat1_w = np.fft.ifft(idat1_w, axis=londim)*dat1_w.wavenumber.size
+        idat1_w = 2*np.real(idat1_w)
+        
+        idat2_w = np.fft.ifft(dat2_w, axis=timedim)*dat2_w.frequency.size
+        idat2_w = np.fft.ifft(idat2_w, axis=londim)*dat2_w.wavenumber.size
+        idat2_w = 2*np.real(idat2_w)
+        
+        flux_e = idat1_e*idat2_e
+        flux_w = idat1_w*idat2_w
+
+        flux_e = xr.DataArray(flux_e, dims=dims, coords=coords, name='eastward')
+        flux_w = xr.DataArray(flux_w, dims=dims, coords=coords, name='westward')
+
+        datout = xr.merge([flux_e, flux_w])
+    else:
+        dat1_select = dat1fft.where( ((dat1fft.wavenumber >= kmin) & (dat1fft.wavenumber <= kmax)) &
+                       ((dat1fft.frequency >= fmin) & (dat1fft.frequency <= fmax)), 0)
+        dat2_select = dat2fft.where( ((dat2fft.wavenumber >= kmin) & (dat2fft.wavenumber <= kmax)) & 
+                       ((dat2fft.frequency >= fmin) & (dat2fft.frequency <= fmax)), 0)
+
+        idat1 = np.fft.ifft(dat1_select, axis=timedim)*dat1_select.frequency.size
+        idat1 = np.fft.ifft(idat1, axis=londim)*dat1_select.wavenumber.size
+        idat1 = 2*np.real(idat1)
+
+        idat2 = np.fft.ifft(dat2_select, axis=timedim)*dat2_select.frequency.size
+        idat2 = np.fft.ifft(idat2, axis=londim)*dat2_select.wavenumber.size
+        idat2 = 2*np.real(idat2)
+
+        flux = idat1*idat2
+
+        datout = xr.DataArray(flux, dims=dims, coords=coords)
+    
+
+    return datout
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def wkfilter_flux(x1, x2, ftaper, spd=1):
     """ Function to compute the flux (x1'x2') associated with

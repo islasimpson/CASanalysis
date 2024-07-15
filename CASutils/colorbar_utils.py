@@ -8,7 +8,7 @@ import matplotlib.colors as colors
 
 def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2, 
    cmap='blue2red', orient='horizontal', posneg='both', ticks=None, fsize=14, nowhite=False,
-   contourlines=False, contourlinescale=1, posonly=False):
+   contourlines=False, contourlinescale=1, posonly=False, nwhite=2):
     """plot a color bar
        Input:
            fig = the figure identified
@@ -29,11 +29,18 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
            fsize = user specified font size
            contourlines = used to overplot contour lines
            contourlinescale = scale factor for contour lines to be overplotted
+           nwhite = the number of white contours to have at the beginning of the 
+                    Wheeler and Kiladis color bar
     """
 
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
     clevs = ci * np.arange(cmin/ci, (cmax+ci)/ci, 1) 
+   # clevs = np.arange(cmin,cmax+ci,ci) 
+#    clevsactual = clevs
+#    print(clevs)
+#    clevs = clevs - ci/2.
+#    print(clevs)
 
     if (cmap == "blue2red"):
         mymap = mycolors.blue2red_cmap(nlevs, nowhite, posonly=posonly)
@@ -47,6 +54,9 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
 
     if (cmap == 'red2blue'):
         mymap = mycolors.red2blue_cmap(nlevs, nowhite)
+
+    if (cmap == 'wk'):
+        mymap = mycolors.wkcmap(nlevs, nwhite)
 
     clevplot=clevs
     if (posneg == "pos"):
@@ -86,7 +96,8 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
         #clevlines = clevlines - ci/2.
         #clevlines = clevs*contourlinescale 
         #clevlines = clevlines - (ci/2.*contourlinescale)
-        clevlines = clevlines[np.abs(clevlines) > ci/2.]
+        threshold = ci + (1./10.)*ci
+        clevlines = clevlines[np.abs(clevlines) > threshold]
         #clevlines = clevlines - ci/2.
 #        clevlines = clevlines[np.abs(clevlines) > ci/10.]
         if (orient=='horizontal'):
@@ -181,7 +192,7 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
 
 def plotcolorbar_log10(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
     cmap='blue2red', orient='horizontal', ticks=None, ticklabels=None,fsize=14,
-    contourlines=False, posonly=False):
+    contourlines=False, posonly=False, contourlinescale=1):
     """ plotting color bar for a log scale, ci, cmin, cmax determin the exponents """
 
     nlevs = (cmax - cmin)/ci + 1
@@ -219,6 +230,12 @@ def plotcolorbar_log10(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
         #clevlines = clevs*contourlinescale
         #clevlines = clevlines[np.abs(clevlines) > ci/2.]
         clevlines = (clevs-ci/2.)
+        #clevlines = (clevs-ci/2.)*contourlinescale
+        #clevlines = clevsactual*contourlinescale
+        clevlines = clevlines*contourlinescale
+        clevlines = clevlines[np.abs(clevlines) > ci/2.]
+        #clevlines = clevlines - (ci/2.)
+        #print(clevlines)
         if (orient=='horizontal'):
             ax.vlines(clevlines[clevlines > 0],-5,5, colors='black', linestyle='solid')
             ax.vlines(clevlines[clevlines < 0],-5,5, colors='black', linestyle='dashed')
@@ -231,7 +248,7 @@ def plotcolorbar_log10(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
 
 
 def plotcolorbar_sayc(fig, clevs, titlestr, x1, x2, y1, y2,
-   cmap='blue2red', orient='horizontal', posneg='both', ticks=None, fsize=14, nowhite=False,
+   cmap='blue2red', orient='horizontal', posneg='both', ticks=None, ticklabels=None, fsize=14, nowhite=False,
    contourlines=False, contourlinescale=1, nwhite=2):
     """plot a color bar
        Input:
@@ -294,12 +311,18 @@ def plotcolorbar_sayc(fig, clevs, titlestr, x1, x2, y1, y2,
         clb = mpl.colorbar.ColorbarBase(ax, cmap=mymap,
             orientation=orient, norm=norm, values=-1 + np.arange(0,len(clevs)-1,1)*ci+ ci/2.,
             ticks=ticksplot)
-        clb.set_ticklabels(ticks)
+        if ticklabels is not None:
+            clb.set_ticklabels(ticklabels)
+        else:
+            clb.set_ticklabels(ticks)
     else:
         clb = mpl.colorbar.ColorbarBase(ax, cmap=mymap,
             orientation=orient, norm=norm, values=-1 + np.arange(0,len(clevs)-1,1)*ci+ ci/2.,
             ticks=-1 + np.arange(0,len(clevs),1)*ci)
-        clb.set_ticklabels(clevs)
+        if ticklabels is not None:
+            clb.set_ticklabels(ticklabels)
+        else:
+            clb.set_ticklabels(clevs)
 
     clb.ax.tick_params(labelsize=fsize)
     clb.set_label(titlestr, fontsize=fsize+2)
@@ -319,3 +342,65 @@ def plotcolorbar_sayc(fig, clevs, titlestr, x1, x2, y1, y2,
 
 
     return ax
+
+#def plotcolorbar_sayc(fig, clevs, titlestr, x1, x2, y1, y2,
+#   cmap='blue2red', orient='horizontal', posneg='both', ticks=None, fsize=14, nowhite=False,
+#   contourlines=False, contourlinescale=1, nwhite=2):
+#    """plot a color bar
+#       Input:
+#           fig = the figure identified
+#           titlestr = the label for the color bar
+#           clevs = the contour levels
+#           x1 = the location of the left edge of the color bar
+#           x2 = the location of the right edge of the color bar
+#           y1 = the location of the bottom edge of the color bar
+#           y2 = the location of the top edge of the color bar
+#           cmap = the color map to be used (only set up for blue2red at the moment)
+#           orient = the orientation (horizontal or vertical)
+#           posneg = if "both", both positive and negative sides are plotted
+#                    if "pos", only the positive side is plotted
+#                    if "net", only the negative side is plotted
+#           ticks = user specified ticklabels
+#           fsize = user specified font size
+#           contourlines = used to overplot contour lines
+#           contourlinescale = scale factor for contour lines to be overplotted
+#           nwhite = the number of white contours to have at the beginning of the 
+#                    Wheeler and Kiladis color bar
+#    """
+#
+#    nlevs = len(clevs)
+#    if (cmap == "blue2red"):
+#        mymap = mycolors.blue2red_cmap(nlevs, nowhite)
+#
+#    if (cmap == "precip"):
+#        mymap = mycolors.precip_cmap(nlevs, nowhite)
+#
+#    if (cmap == 'red2blue'):
+#        mymap = mycolors.red2blue_cmap(nlevs, nowhite)
+#
+#    if (cmap == 'wk'):
+#        mymap = mycolors.wkcmap(nlevs, nwhite)
+#
+#    clevplot=clevs
+#    if (posneg == "pos"):
+#        clevplot = clevs[clevs >= 0]
+#    if (posneg == "neg"):
+#        clevplot = clevs[clevs <= 0]
+#
+#    ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
+#    #norm = mpl.colors.Normalize(vmin=cmin, vmax=cmax)
+#    #norm = mpl.colors.Normalize(vmin=clevs[0], vmax=clevs[len(clevs)-1])
+#
+#    ci = (np.max(clevs) - np.min(clevs))/len(clevs)
+#    norm = mpl.colors.Normalize(vmin=clevs[0], vmax=clevs[len(clevs)-1])
+#
+#
+#    clb = mpl.colorbar.ColorbarBase(ax, cmap=mymap,
+#        orientation=orient, norm=norm, values=clevs[0] + np.arange(0,len(clevs),1)*ci - ci/2.,
+#        ticks=clevs[0] + np.arange(0,len(clevs),1)*ci)
+#    clb.set_ticklabels(clevs)
+#
+#    clb.ax.tick_params(labelsize=fsize)
+#    clb.set_label(titlestr, fontsize=fsize+2)
+#
+#    return ax

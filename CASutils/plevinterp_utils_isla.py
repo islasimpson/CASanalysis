@@ -328,6 +328,90 @@ def _vertical_remap_extrap(new_levels, lev_dim, data, output, pressure, ps,
 
     return output
 
+def interp_pressure_to_pressure(data: xr.DataArray,
+                                pmid: xr.DataArray,
+                                new_levels: np.ndarray = __pres_lev_mandatory__, 
+                                lev_dim: str = None,
+                                method: str = 'linear') -> xr.DataArray:
+    """Interpolate from pressure levels that are a function of space and time to
+       a constant set of pressure levels Isla (May 6th 2024)"""
+
+    if lev_dim is None:
+        try:
+            lev_dim = data.cf["vertical"].name
+        except Exception:
+            raise ValueError(
+                "Unable to determine vertical dimension name. Please specify the name via `lev_dim` argument."
+            )
+
+    try:
+        func_interpolate = _func_interpolate(method)
+    except ValueError as vexc:
+        raise ValueError(vexc.args[0])
+
+    interp_axis = data.dims.index(lev_dim)
+
+    pressure = pmid
+
+    # Make pressure shape same as data shape
+    pressure = pressure.transpose(*data.dims)
+
+    # If an unchunked Xarray input is given, chunk it just with its dims
+    if data.chunks is None:
+        data_chunk = dict([
+            (k, v) for (k, v) in zip(list(data.dims), list(data.shape))
+        ])
+        data = data.chunk(data_chunk)
+
+    # Chunk pressure equal to data's chunks
+    pressure = pressure.chunk(data.chunks)
+
+    # Output data structure elements
+    out_chunks = list(data.chunks)
+    out_chunks[interp_axis] = (new_levels.size,)
+    out_chunks = tuple(out_chunks)
+    # ''' end of boilerplate
+
+    from dask.array.core import map_blocks
+    output = map_blocks(
+        _vertical_remap,
+        func_interpolate,
+        new_levels,
+        pressure.data,
+        data.data,
+        interp_axis,
+        chunks=out_chunks,
+        dtype=data.dtype,
+        drop_axis=[interp_axis],
+        new_axis=[interp_axis],
+    )
+
+    # End of Workaround
+    ###############################################################################
+
+    output = xr.DataArray(output, name=data.name, attrs=data.attrs)
+
+    # Set output dims and coords
+    dims = [
+        data.dims[i] if i != interp_axis else "plev" for i in range(data.ndim)
+    ]
+
+    # Rename output dims. This is only needed with above workaround block
+    dims_dict = {output.dims[i]: dims[i] for i in range(len(output.dims))}
+    output = output.rename(dims_dict)
+
+    coords = {}
+    for (k, v) in data.coords.items():
+        if k != lev_dim:
+            coords.update({k: v})
+        else:
+            coords.update({"plev": new_levels})
+
+    output = output.transpose(*dims).assign_coords(coords)
+
+    return output
+
+
 
 def interp_hybrid_to_pressure(data: xr.DataArray,
                               ps: xr.DataArray,

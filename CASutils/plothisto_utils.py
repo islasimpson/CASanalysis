@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, ylim=None,
-     yticklabels=None, ytitle=None, xticklabels=None, xtitle=None, color='lightgray', label=None, addlines=False, title=None):
+     yticks=None, yticklabels=None, ytitle=None, xticks=None, xticklabels=None, xtitle=None, 
+     color='lightgray', label=None, addlines=False, title=None,orient='horizontal'):
     """ Plot a histogram 
     Input: fig = the figure
            dat = data to plot
@@ -18,10 +19,14 @@ def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, 
         ax.set_xlim(xlim)
     if (ylim):
         ax.set_ylim(ylim)
+    if (yticks):
+        ax.set_yticks(yticks)
     if (yticklabels):
         ax.set_yticklabels(yticklabels, fontsize=14)
     if (ytitle):
         ax.set_ylabel(ytitle, fontsize=14)
+    if (xticks):
+        ax.set_xticks(xticks)
     if (xticklabels):
         ax.set_xticklabels(xticklabels, fontsize=14)
     if (xtitle):
@@ -33,10 +38,14 @@ def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, 
     if (percent):
         histo = (histo/dat.size)*100.
 
-    ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0],bottom=0, 
+    if ( orient == 'horizontal' ):
+        ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0],bottom=0, 
                      edgecolor='black',color=color,label=label)
+    elif (orient == 'vertical'):
+        ax.bar(0, binedges[1:np.size(binedges)] - binedges[0:np.size(binedges)-1], width=histo, 
+         bottom = binedges[0:np.size(binedges)-1], edgecolor='black', color=color, label=label, align='edge')
 
-
+    #!!! Note - doesn't work for the vertical orientation
     if (addlines):
         print("adding lines")
         binwidth=binedges[1]-binedges[0]
@@ -62,6 +71,16 @@ def oplothisto(ax, dat, bins, percent=False, color='lightgray',label=None, alpha
     ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0], bottom=0,
                     edgecolor='black', color=color, label=label, alpha=alpha)
 
+    return ax
+
+
+def oplotbar(ax, x, y, bottom=0, color='lightgray', label='', hatch=False):
+
+    if (hatch):
+        ax.bar(x,y,width=1,bottom=bottom,edgecolor=color,facecolor='None',
+           color=color, label=label, hatch='///')
+    else:
+        ax.bar(x,y,width=1,bottom=bottom,edgecolor='black',color=color,label=label)
     return ax
 
 

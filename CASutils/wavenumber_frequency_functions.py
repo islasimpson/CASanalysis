@@ -262,7 +262,15 @@ def resolveWavesHayashi( varfft: xr.DataArray, nDayWin: int, spd: int ) -> xr.Da
     print(varspacetime.shape)
     #  Create the real power spectrum pee = sqrt(real^2+imag^2)^2
     logging.debug("calculate power")
-    pee       = (np.abs(varspacetime))**2
+#    pee       = (np.abs(varspacetime))**2
+#   !! IRS, I think the above line was a bug.  Instead, I think we should be combining the 
+#   (+k, +w) quadrant with the (-k, -w) quadrant and then calculating the power
+#   Alternatively we could just stick with the positive frequencies and multiply by two.  That's
+#   what I'll do here.
+
+    pee = (2*np.abs(varspacetime))**2
+
+
     logging.debug("put into DataArray")
     # add meta data for use upon return
     wave      = np.arange(-mlon // 2, (mlon // 2 )+ 1, 1, dtype=int)  
@@ -283,7 +291,14 @@ def resolveWavesHayashi( varfft: xr.DataArray, nDayWin: int, spd: int ) -> xr.Da
         elif c == "frequency":
             ocoords['frequency'] = freq
     pee = xr.DataArray(pee, dims=odims, coords=ocoords)
-    return pee 
+
+    pee = pee.where( pee.frequency >= 0, drop=True)
+    print('IRS6', np.max(pee))
+    peelatgt0 = pee.where( pee.lat > 0, drop=True)
+    print('IRS7', np.max(peelatgt0))
+    peelatlt0 = pee.where( pee.lat < 0, drop=True)
+    print('IRS8', np.max(peelatlt0))
+    return pee
 
 
 def split_hann_taper(series_length, fraction):
