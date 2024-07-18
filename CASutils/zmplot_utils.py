@@ -4,7 +4,7 @@ from CASutils import colormap_utils as mycolors
 import sys
 
 def plotlatlogpre_100to1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x2=0.9, y1=0.1, y2=0.9, 
-ylabel=True,yticklabels=False,fsize=14):
+ylabel=True,yticklabels=True,fsize=14):
     """
      Plot a pressure versus latitude contour plot between 100 and 1 hPa on a log p scale
     """
