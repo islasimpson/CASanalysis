@@ -36,6 +36,7 @@ def seasonal_climatology_weighted(dat):
     dat_jja = ds_season.where(ds_season.time.dt.month == 7, drop=True).mean('time')
     dat_son = ds_season.where(ds_season.time.dt.month == 10, drop=True).mean('time')
     dat_am = datw_am.groupby('time.year').sum('time')
+    dat_am = dat_am.mean('year')
   
     dat_djf = dat_djf.rename('DJF')
     dat_mam = dat_mam.rename('MAM')
