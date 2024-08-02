@@ -21,10 +21,10 @@ def seasonal_climatology_weighted(dat):
     days_in_month = dat.time.dt.days_in_month
     mons = dat.time.dt.month
     wgts = mons.copy(deep=True)
-    wgts = wgts.where( (mons == 1) | (mons == 2) | (mons == 12), days_in_month / dpseas['DJF'])
-    wgts = wgts.where( (mons == 3) | (mons == 4) | (mons == 5), days_in_month / dpseas['MAM'])
-    wgts = wgts.where( (mons == 6) | (mons == 7) | (mons == 8), days_in_month / dpseas['JJA'])
-    wgts = wgts.where( (mons == 9) | (mons == 10) | (mons == 11), days_in_month / dpseas['SON'])
+    wgts = xr.where( (mons == 1) | (mons == 2) | (mons == 12), days_in_month / dpseas['DJF'], wgts) 
+    wgts = xr.where( (mons == 3) | (mons == 4) | (mons == 5), days_in_month / dpseas['MAM'], wgts) 
+    wgts = xr.where( (mons == 6) | (mons == 7) | (mons == 8), days_in_month / dpseas['JJA'], wgts) 
+    wgts = xr.where( (mons == 9) | (mons == 10) | (mons == 11), days_in_month / dpseas['SON'], wgts) 
     datw = dat*wgts
 
     wgts_am = days_in_month / 365.
