@@ -131,7 +131,7 @@ def calc_season_nharm(darray, nharms, dimtime=0):
 
     return darray_filtered_xr
 
-def runningmean(dat, nysm, timeaxis='time', dropna=False):
+def runningmean(dat, nysm, timeaxis='time', dropna=False, center=True):
     """dat = your data with a time axis with name equal to whatever you set "timeaxis" to
        nysm = the number of time values in your running mean
        dropna = False if you don't want to drop the NaN's at the edges
@@ -139,9 +139,9 @@ def runningmean(dat, nysm, timeaxis='time', dropna=False):
 
     window_kwargs = {timeaxis:nysm}
     if (dropna):
-        datm = dat.rolling(center=True, min_periods=nysm, **window_kwargs).mean(timeaxis).dropna(timeaxis)
+        datm = dat.rolling(center=center, min_periods=nysm, **window_kwargs).mean(timeaxis).dropna(timeaxis)
     else:
-        datm = dat.rolling(center=True, min_periods=nysm, **window_kwargs).mean(timeaxis)
+        datm = dat.rolling(center=center, min_periods=nysm, **window_kwargs).mean(timeaxis)
     return datm
 
 def runningmean_cyclic(dat, nysm, timeaxis='time', dropna=False):
