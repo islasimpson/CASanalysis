@@ -79,7 +79,7 @@ def get_days_per_mon(time, calendar='standard'):
     Args: time (CFTimeIndex): ie. ds.time.to_index()
           calendar (str): default 'standard'
     """
-    month_length = np.zeros(len(time), dtype=np.int)
+    month_length = np.zeros(len(time), dtype=int)
 
     cal_days = dpm[calendar]
 
@@ -136,7 +136,53 @@ def season_mean(ds, var=None, season = "all", cal = "none"):
 
     return smean
 
-def season_ts(ds, season, var=None):
+def season_ts(ds, var=None, cal='noleap'):
+    try:
+        ds = ds[var]
+    except:
+        pass
+
+    month_length = xr.DataArray(get_days_per_mon(ds.time.to_index(), calendar=cal), 
+                       coords=[ds.time], name='month_length')
+
+    #---Sort it out so that December goes into the following year
+    yearindex = ds.time.dt.year
+    yearindex = yearindex.where( yearindex.time.dt.month != 12, yearindex + 1)
+
+    #!!!! Fix this to delete the last Dec too.
+    yearindex = yearindex.where( ~( (yearindex.time.dt.year == yearindex.time.dt.year.isel(time=0)) & 
+                                  ((yearindex.time.dt.month == 1) | (yearindex.time.dt.month == 2)) ), -99999)
+    yearindex = yearindex.where( ~( (yearindex > ds.time.dt.year.isel(time=ds.time.size-1)) ), -99999)
+
+    #----indices for grouping
+    seasonindex = ds.time.dt.season
+    yearseasindex = [ f'{int(yearindex[i].values)}-{seasonindex[i].values}' for i in np.arange(0,yearindex.size,1) ]
+
+    month_length = month_length.assign_coords({'yearseas':('time', yearseasindex)})
+    ds = ds.assign_coords({'yearseas':('time', yearseasindex)})
+    weights = month_length.groupby(month_length.yearseas) / month_length.groupby(month_length.yearseas).sum('time')
+
+    smean = (ds * weights).groupby(ds.yearseas).sum('time')
+    smean = smean.where( smean.yearseas != '-99999-DJF', drop=True)
+
+    seas=['DJF','MAM','JJA','SON']
+    allseas=[]
+    for iseas in np.arange(0,len(seas),1):
+        elements = [ smean.sel(yearseas = s) for s in smean.yearseas.values if seas[iseas] in s ]
+        elements = xr.concat(elements, dim='year')
+        year = [ int(str(elements.yearseas.isel(year=i).values)[:4]) for i in np.arange(0,elements.yearseas.size,1) ]
+#        elements['yearseas'] = year
+        elements = elements.assign_coords(year=("year",year))
+        elements = elements.drop_vars('yearseas')
+#        elements = elements.rename({'yearseas':'year'})
+        allseas.append(elements)
+    allseas = xr.concat(allseas, dim='season')
+    allseas['season'] = seas
+    
+    return allseas 
+
+
+def season_ts_old(ds, season, var=None):
     """ calculate timeseries of seasonal averages
     Args: ds (xarray.Dataset): dataset
           var (str): variable to calculate 

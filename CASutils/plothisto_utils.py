@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, ylim=None,
      yticks=None, yticklabels=None, ytitle=None, xticks=None, xticklabels=None, xtitle=None, 
-     color='lightgray', label=None, addlines=False, title=None,orient='horizontal'):
+     color='lightgray', label=None, addlines=False, title=None,orient='horizontal',alpha=1):
     """ Plot a histogram 
     Input: fig = the figure
            dat = data to plot
@@ -40,10 +40,10 @@ def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, 
 
     if ( orient == 'horizontal' ):
         ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0],bottom=0, 
-                     edgecolor='black',color=color,label=label)
+                     edgecolor='black',color=color,label=label,alpha=alpha)
     elif (orient == 'vertical'):
         ax.bar(0, binedges[1:np.size(binedges)] - binedges[0:np.size(binedges)-1], width=histo, 
-         bottom = binedges[0:np.size(binedges)-1], edgecolor='black', color=color, label=label, align='edge')
+         bottom = binedges[0:np.size(binedges)-1], edgecolor='black', color=color, label=label, align='edge',alpha=alpha)
 
     #!!! Note - doesn't work for the vertical orientation
     if (addlines):
