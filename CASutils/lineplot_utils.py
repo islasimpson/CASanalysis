@@ -189,7 +189,7 @@ def plotlinetime_j2j_monthly(fig, datatemp, x1, x2, y1, y2, titlestr, yrange=Non
 
     return ax
 
-def oplotlinetime_j2j_monthly(ax, datatemp, linecolor=None, linewidth=1, points=True, label=None):
+def oplotlinetime_j2j_monthly(ax, datatemp, linecolor=None, linewidth=1, linestyle='solid', points=True, label=None):
     """ overplot a line on a January - December monthly line plot"""
 
     data = datatemp.copy(deep=True)
@@ -203,12 +203,12 @@ def oplotlinetime_j2j_monthly(ax, datatemp, linecolor=None, linewidth=1, points=
 
 
     if (linecolor[0]):
-        ax.plot(np.arange(0,14,1)-0.5,dataplot,color=linecolor, linewidth=linewidth, label=label)
+        ax.plot(np.arange(0,14,1)-0.5,dataplot,color=linecolor, linewidth=linewidth, label=label, linestyle=linestyle)
         if (points == True):
             ax.plot(np.arange(0,14,1)-0.5,dataplot,"o",markerfacecolor=linecolor, 
              markeredgecolor="black", markersize=10)
     else:
-        ax.plot(np.arange(0,14,1)-0.5,dataplot, linewidth=linewidth, label=label)
+        ax.plot(np.arange(0,14,1)-0.5,dataplot, linewidth=linewidth, label=label, linestyle=linestyle)
         if (points == True):
             ax.plot(np.arange(0,14,1)-0.5,dataplot,"o",markeredgecolor="black", 
             markersize=10, markeredgewidth=2)
