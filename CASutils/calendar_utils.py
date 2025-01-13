@@ -334,6 +334,10 @@ def YYYYMM2date(time, caltype='standard'):
     date = pd.to_datetime(time, format='%Y%m')
     return date
 
+def YYYYdashMM2date(time, caltype='standard'):
+    date = pd.to_datetime(time, format='%Y-%m')
+    return date
+
 def YYYYMMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%Y%m%d')
     return time
