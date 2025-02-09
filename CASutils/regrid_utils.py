@@ -61,4 +61,69 @@ def add_grid_bounds(ds):
     return ds
 
 
+#---------Utilities for dealing with conservative remapping
+def construct_grid(lon, lat, lon_b, lat_b):
+    """Construct the grid information (lons, lats, and bounds) for input to xesmf when
+       doing conservative remapping"""
+    if (np.array(lon).ndim == 2):
+        grid = {
+            'lat': lat,
+            'lon': lon,
+            'lat_b': lat_b,
+            'lon_b': lon_b
+        }
+    else:
+        lon_2d = np.tile(lon[np.newaxis,:], (len(lat),1))
+        lat_2d = np.tile(lat, (len(lon),1)).T
+        grid = {
+            'lat': lat_2d,
+            'lon': lon_2d,
+            'lat_b': lat_b,
+            'lon_b': lon_b
+        }
+    return grid
+
+def get_bounds(lon,lat):
+    """ Obtain the longitude and latitude bounds for the xesmf regridder
+        (Needed for conservative remapping)
+    """
+
+    # Case of a 2D lon/lat array
+    if (np.array(lon).ndim == 2):
+        nlat = lon[:,0].size
+        nlon = lon[0,:].size
+
+        lon_b = np.zeros([nlat + 1, nlon + 1])
+        lat_b = np.zeros([nlat + 1, nlon + 1])
+
+        lon_b[1:,1:-1] = (lon[:,1:] - lon[:,0:-1])/2. + lon[:,0:-1]
+        lon_b[1:,0] = lon[:,0] - (lon[:,1] - lon[:,0])/2.
+        lon_b[1:,-1] = lon[:,-1] + (lon[:,-1] - lon[:,-2])/2.
+        lon_b[0,:] = lon_b[1,:]
+        lon_b[-1,:] = lon_b[-2,:]
+
+        lat_b[1:-1,1:] = lat[0:-1,:] + (lat[1:,:] - lat[0:-1,:])/2.
+        lat_b[0,1:] = lat[0,:] - (lat[1,:] - lat[0,:])/2.
+        lat_b[-1,1:] = lat[-1,:] + (lat[-1,:] - lat[-2,:])/2.
+        lat_b[:,0] = lat_b[:,1]
+        lat_b[:,-1] = lat_b[:,-2]
+
+    else:
+        nlat = lat.size
+        nlon = lon.size
+
+        lon_b = np.zeros( [nlon+1] )
+        lat_b = np.zeros( [nlat+1] )
+
+        lon_b[1:-1] = (lon[1:] - lon[0:-1])/2. + lon[0:-1]
+        lon_b[0] = lon[0] - (lon[1]-lon[0])/2.
+        lon_b[-1] = lon[-1] + (lon[-1] - lon[-2])/2.
+        lon_b = np.tile(lon_b, (nlat+1,1))
+
+        lat_b[1:-1] = lat[0:-1] + (lat[1:] - lat[0:-1])/2.
+        lat_b[0] = lat[0] - (lat[1] - lat[0])/2.
+        lat_b[-1] = lat[-1] + (lat[-1] - lat[-2])/2.
+        lat_b = np.tile(lat_b[:,np.newaxis], (1, nlon+1))
+
+    return lon_b, lat_b
 
