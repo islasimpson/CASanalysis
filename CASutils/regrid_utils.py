@@ -127,3 +127,27 @@ def get_bounds(lon,lat):
 
     return lon_b, lat_b
 
+def regrid_conservative(dat, lonin, latin, lonout, latout, reuse_wgts=False, wgtfile='wgt.nc'):
+    """ Conservatively remap """
+    lonin_b, latin_b = get_bounds(np.array(lonin), np.array(latin))
+    grid_in = construct_grid(np.array(lonin), np.array(latin), np.array(lonin_b), np.array(latin_b))
+
+    lonout_b, latout_b = get_bounds(np.array(lonout), np.array(latout))
+    grid_out = construct_grid(np.array(lonout), np.array(latout), np.array(lonout_b), np.array(latout_b))
+
+    regridder = xe.Regridder(grid_in, grid_out, 'conservative', reuse_weights=reuse_wgts, filename=wgtfile)
+
+    dat_rg = regridder(dat)
+    lon1d = dat_rg.lon.isel(y=0)
+    lat1d = dat_rg.lat.isel(x=0)
+
+    dat_rg = dat_rg.drop_vars(['lon','lat'])    
+    dat_rg = dat_rg.assign_coords({'x':lon1d, 'y':lat1d})
+    dat_rg = dat_rg.rename({'x':'lon', 'y':'lat'})
+
+    return dat_rg
+
+
+
+
+
