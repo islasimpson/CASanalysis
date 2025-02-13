@@ -1,10 +1,12 @@
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, ylim=None,
      yticks=None, yticklabels=None, ytitle=None, xticks=None, xticklabels=None, xtitle=None, 
-     color='lightgray', label=None, addlines=False, title=None,orient='horizontal',alpha=1):
+     color='lightgray', label=None, addlines=False, title=None,orient='horizontal',alpha=1, 
+     pointsonly=False, markercolor='black'):
     """ Plot a histogram 
     Input: fig = the figure
            dat = data to plot
@@ -39,8 +41,12 @@ def plothisto(fig, dat, bins, x1=0, x2=1, y1=0, y2=1, percent=False, xlim=None, 
         histo = (histo/dat.size)*100.
 
     if ( orient == 'horizontal' ):
-        ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0],bottom=0, 
+        if (pointsonly == False):
+            ax.bar(binedges[0:np.size(binedges)-1], histo, width=binedges[1]-binedges[0],bottom=0, 
                      edgecolor='black',color=color,label=label,alpha=alpha)
+        else:
+            ax.plot(binedges[0:np.size(binedges)-1]+(binedges[1]-binedges[0])/2., histo, "o", 
+                markersize=8, color=markercolor)
     elif (orient == 'vertical'):
         ax.bar(0, binedges[1:np.size(binedges)] - binedges[0:np.size(binedges)-1], width=histo, 
          bottom = binedges[0:np.size(binedges)-1], edgecolor='black', color=color, label=label, align='edge',alpha=alpha)
@@ -90,4 +96,9 @@ def calchisto(dat, bins, percent=False):
         histo = (histo/dat.size)*100.
     return histo, binedges
 
-
+def compute_kde(dat, bsize, bmin, bmax):
+    bins = np.arange(bmin, bmax, bsize)
+    kernel = stats.gaussian_kde(dat)
+    datpdf = kernel(bins)*100.*bsize
+    datpdf = xr.DataArray(datpdf, dims=['bins'], coords=[bins])
+    return datpdf
