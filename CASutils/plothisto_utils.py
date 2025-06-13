@@ -96,8 +96,11 @@ def calchisto(dat, bins, percent=False):
         histo = (histo/dat.size)*100.
     return histo, binedges
 
-def compute_kde(dat, bsize, bmin, bmax):
-    bins = np.arange(bmin, bmax, bsize)
+def compute_kde(dat,bins=None, bsize=None, bmin=None, bmax=None):
+    if bins is None:
+        bins = np.arange(bmin, bmax+bsize, bsize)
+    else:
+        bsize = bins[1]-bins[0]
     kernel = stats.gaussian_kde(dat)
     datpdf = kernel(bins)*100.*bsize
     datpdf = xr.DataArray(datpdf, dims=['bins'], coords=[bins])
