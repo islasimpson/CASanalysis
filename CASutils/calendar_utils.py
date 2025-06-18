@@ -422,4 +422,11 @@ def calcannualmean(ds, skipna=False):
     return ds_am
 
 
-
+def monthlymean_from_dailymean(dat):
+    """Compute a monthly mean from a daily mean"""
+    monyearstr = xr.DataArray(dat.indexes['time'].strftime('%Y-%m'), coords=dat.time.coords, name='monyearstr')
+    dat_mon = dat.groupby(monyearstr).mean('time')
+    time = dat.time.groupby(monyearstr).mean('time')
+    dat_mon['monyearstr'] = time
+    dat_mon = dat_mon.rename({'monyearstr':'time'})
+    return dat_mon
