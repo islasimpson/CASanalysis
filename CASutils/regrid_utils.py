@@ -147,7 +147,13 @@ def regrid_conservative(dat, lonin, latin, lonout, latout, reuse_wgts=False, wgt
 
     return dat_rg
 
-
+def regrid_bilinear(dat, lonout, latout, reuse_wgts=False, wgtfile='wgt.nc'):
+    """ Bilinear remap """
+    grid_out = xr.Dataset({'lat': (['lat'], latout.values)}, {'lon': (['lon'], lonout.values)})
+    regridder = xe.Regridder(dat, grid_out, 'bilinear', periodic=True, reuse_weights=reuse_wgts,
+                     filename=wgtfile)
+    dat_rg = regridder(dat)
+    return dat_rg 
 
 
 
