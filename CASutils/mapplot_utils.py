@@ -375,34 +375,104 @@ def contourmap_bothoceans_mjoregion_fill_pos(fig, dat, lon, lat, ci, cmin, cmax,
  
     return ax
 
+def contourmap_indianocean_pacific_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
+ x1, x2, y1, y2, xlabels=True, ylabels=True, cmap="blue2red", fontsize=15, contourlines=False):
+    """ plot a contour map of 2D data dat with coordinates lon and lat
+        Input:
+              fig = the figure identifier
+              dat = the data to be plotted
+              lon = the longitude coordinate
+              lat = the latitude coordinate
+              ci = the contour interval
+              cmin = the minimum of the contour range
+              cmax = the maximum of the contour range
+              titlestr = the title of the map
+              x1 = position of the left edge
+              x2 = position of the right edge
+              y1 = position of the bottom edge
+              y2 = position of the top edge
+              labels = True/False (ticks and  labels are plotted if true) 
+              cmap = color map (only set up for blue2red at the moment)
+    """
 
+    # set up contour levels and color map
+    nlevs = (cmax-cmin)/ci + 1
+    clevs = np.arange(cmin, cmax+ci, ci)
+     
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
 
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
 
+    #ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree(central_longitude=100))
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree(central_longitude=180))
     #ax.cmap.set_over(mymap(len(mymap)-1))
-#    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
     ax.set_aspect('auto')
-    #ax.add_feature(cfeature.COASTLINE)
-    ax.set_extent([0,360,-30,30], crs = ccrs.PlateCarree())
-    #ax.set_extent('global')
+#    ax.set_extent([40,180,-30,30], crs = ccrs.PlateCarree(central_longitude=100))
+#    ax.set_extent([40,180,-30,30], crs = ccrs.PlateCarree(central_longitude=100))
+    ax.set_extent([40,290,-20,20], crs = ccrs.PlateCarree())
 
-    if (labels):
-        ax.set_xticks([0,45,90,135,180,225,270,315], crs = ccrs.PlateCarree())
-        ax.set_xticklabels(['0','45E','90E','135E','180E','135W','90W','45W'], fontsize=fontsize-3)
-        #ax.set_xticklabels(['180W','120W','60W','0','60E','120E','180E'], fontsize=fontsize-3)
-        ax.set_yticks([-30,-20,-10,0,10,20,30], crs = ccrs.PlateCarree())
-        ax.set_yticklabels(['30S','20S','10S','0','10S','20S','30S'], fontsize=fontsize-3)
-        ax.xformatter = LongitudeFormatter()
+
+    if (ylabels):
+        ax.set_yticks([-20,0,20])
+        ax.set_yticklabels(['20S','0','20N'], fontsize=fontsize-3)
         ax.yformatter = LatitudeFormatter()
+    if (xlabels):   
+        ax.set_xticks([90-180,180-180,270-180])
+        ax.set_xticklabels(['90E','180E','270E'], fontsize=fontsize-3)
+       # ax.set_xticks([60-200, 120-200, 180-200, 240-200, 300-200, 360-200])
+       # ax.set_xticklabels(['60E','120E', '180W', '120W', '60W','0W'], fontsize=fontsize-3)
+       # ax.set_yticks([-30,-20,-10,0,10,20,30], crs = ccrs.PlateCarree())
+       # ax.set_yticklabels(['30S','20S','10S','0','10N','20N','30N'], fontsize=fontsize-3)
+        ax.xformatter = LongitudeFormatter()
+
 
     ax.set_title(titlestr, fontsize=fontsize)
 
-    #dat, lon = add_cyclic_point(dat, coord=lon)
-    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend="max", transform=ccrs.PlateCarree())
+    dat, lon = add_cyclic_point(dat, coord=lon)
+    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend="max",
+            transform=ccrs.PlateCarree())
+
+    if (contourlines):
+        clevs2 = clevs[ np.abs(clevs) > ci/2 ]
+        ax.contour(lon,lat,dat,levels=clevs2, colors='black', transform=ccrs.PlateCarree())
+
+
 
     ax.add_feature(cfeature.COASTLINE)
-
+ 
     return ax
+
+
+
+
+
+#    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree(central_longitude=180))
+#    #ax.cmap.set_over(mymap(len(mymap)-1))
+##    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
+#    ax.set_aspect('auto')
+#    #ax.add_feature(cfeature.COASTLINE)
+#    ax.set_extent([0,360,-30,30], crs = ccrs.PlateCarree())
+#    #ax.set_extent('global')
+#
+#    if (labels):
+#        ax.set_xticks([0,45,90,135,180,225,270,315], crs = ccrs.PlateCarree())
+#        ax.set_xticklabels(['0','45E','90E','135E','180E','135W','90W','45W'], fontsize=fontsize-3)
+#        #ax.set_xticklabels(['180W','120W','60W','0','60E','120E','180E'], fontsize=fontsize-3)
+#        ax.set_yticks([-30,-20,-10,0,10,20,30], crs = ccrs.PlateCarree())
+#        ax.set_yticklabels(['30S','20S','10S','0','10S','20S','30S'], fontsize=fontsize-3)
+#        ax.xformatter = LongitudeFormatter()
+#        ax.yformatter = LatitudeFormatter()
+#
+#    ax.set_title(titlestr, fontsize=fontsize)
+#
+#    #dat, lon = add_cyclic_point(dat, coord=lon)
+#    ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend="max", transform=ccrs.PlateCarree())
+#
+#    ax.add_feature(cfeature.COASTLINE)
+#
+#    return ax
 
 
 
@@ -1103,6 +1173,104 @@ def contourmap_northatlantic_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titles
     if (labels):
         ax.set_xticks([-90,-60, -30, 0, 30], crs = ccrs.PlateCarree())
         ax.set_xticklabels(['90W','60W','30S','0','30E'], fontsize=12)
+        ax.set_yticks([20,40,60,80], crs = ccrs.PlateCarree())
+        ax.set_yticklabels(['20N','40N','60N','80N'], fontsize=12)
+        ax.xformatter = LongitudeFormatter()
+        ax.yformatter = LatitudeFormatter()
+    
+    ax.set_title(titlestr, fontsize=16)
+
+    dat, lon = add_cyclic_point(dat, coord=lon)
+
+    if (speclevs):
+        norm = colors.BoundaryNorm(boundaries=clevs, ncolors=256)
+        ax.contourf(lon,lat,dat,levels=clevs, cmap=mymap, extend='both', norm=norm,
+           transform=ccrs.PlateCarree())
+    else:
+        ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend='both',
+           transform=ccrs.PlateCarree())
+
+    if (signifdat is not None):
+        lonsignif = signifdat.lon
+        signifdat, lonsignif = add_cyclic_point(signifdat, coord=lonsignif)
+        if (stipplesignif):
+            density=3
+            ax.contourf(lonsignif,lat,signifdat,levels=[0,0.5,1], colors='none',
+             hatches=[density*'.',density*'.',density*','],
+             transform=ccrs.PlateCarree())
+        else:
+            ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray',
+                        transform = ccrs.PlateCarree())
+
+    if (extrastipple is not None):
+        stipple_mask = extrastipple*nan
+        stipple_mask[::stipden, ::stipden] = extrastipple[::stipden, ::stipden]
+        stipple_mask = stipple_mask.stack(z=('lat','lon'))
+        stipple_mask = stipple_mask.dropna('z')
+        ax.plot(stipple_mask.lon, stipple_mask.lat, marker=".",
+          color=stipplecolor, markersize=stipsize, linestyle='None', transform=ccrs.PlateCarree())
+
+
+    if (contourlines):
+        clevs = clevs[np.abs(clevs) > ci/2.]
+        clevs = clevs*contourlinescale
+        cpos = ax.contour(lon,lat,dat,levels=clevs[clevs > 0], colors='black', transform=ccrs.PlateCarree())
+        cneg = ax.contour(lon,lat,dat,levels=clevs[clevs < 0], colors='black', linestyle='dotted',
+                 transform=ccrs.PlateCarree())
+        ax.clabel(cpos, cpos.levels, inline=True, fontsize=10, fmt='{:.2f} '.format)
+        ax.clabel(cneg, cneg.levels, inline=True, fontsize=10, fmt='{:.2f} '.format)
+
+
+    if (maskocean):
+        ax.add_feature(cart.feature.OCEAN, zorder=1, edgecolor='k')
+
+    return ax
+
+def contourmap_northatlantic_europe_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
+ x1, x2, y1, y2, labels=True, cmap="blue2red", maskocean=False, contourlines=False, contourlinescale=1,
+ signifdat=None, stipplesignif=False, speclevs=None, extrastipple=None, stipplecolor='Gray', stipden=1,
+ stipsize=3):
+    """ plot a contour map of 2D data dat with coordinates lon and lat
+        Input:
+              fig = the figure identifier
+              dat = the data to be plotted
+              lon = the longitude coordinate
+              lat = the latitude coordinate
+              ci = the contour interval
+              cmin = the minimum of the contour range
+              cmax = the maximum of the contour range
+              titlestr = the title of the map
+              x1 = position of the left edge
+              x2 = position of the right edge
+              y1 = position of the bottom edge
+              y2 = position of the top edge
+              labels = True/False (ticks and  labels are plotted if true) 
+              cmap = color map (only set up for blue2red at the moment)
+    """
+
+    # set up contour levels and color map
+    if (speclevs):
+        clevs = speclevs
+        nlevs = len(clevs)
+    else:
+        nlevs = (cmax-cmin)/ci + 1
+        clevs = np.arange(cmin, cmax+ci, ci)
+    
+ 
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
+
+    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.PlateCarree())
+    ax.set_aspect('auto')
+    ax.add_feature(cfeature.COASTLINE, zorder=1000)
+    ax.set_extent([-100,60, 10, 80], crs = ccrs.PlateCarree())
+    
+    if (labels):
+        ax.set_xticks([-90,-60, -30, 0, 30,60], crs = ccrs.PlateCarree())
+        ax.set_xticklabels(['90W','60W','30S','0','30E','60E'], fontsize=12)
         ax.set_yticks([20,40,60,80], crs = ccrs.PlateCarree())
         ax.set_yticklabels(['20N','40N','60N','80N'], fontsize=12)
         ax.xformatter = LongitudeFormatter()
