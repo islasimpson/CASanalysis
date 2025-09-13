@@ -129,6 +129,20 @@ def get_percentage_in_transitional(x, fitdat):
         transper = (len(transx) / len(x))*100.
     return transper
 
+def get_critical_point(fitdat):
+    """ find the critical point """
+
+    if (fitdat.curve_type == '111'):
+        cp = fitdat.x1.item()
+    if (fitdat.curve_type == '011'):
+        cp = fitdat.x0.item()
+    if ((fitdat.curve_type != '111') & (fitdat.curve_type != '011')):
+        cp = nan
+
+    return cp
+
+
+
 def get_transitional_slope(fitdat):
     """ Output the slope of the transitional regime based on the Hsu and Dirmeyer fit parameters (fitdat) """
     if (fitdat.curve_type == '111'):
@@ -173,7 +187,7 @@ def curve_001(x,y):
     """
     p0 = [np.median(y),0]  # y0 and k1=0
     bounds = ([np.min(y),0],  # bounds y0 to range of y, 0<k1<0.01
-              [np.max(y),0.05])
+              [np.max(y),0.01])
 
     p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
     yfit = single_linear(x,*p)
@@ -193,7 +207,7 @@ def curve_010(x,y):
         0.05 < k1 < 1000
     """
     p0 = [np.median(y),50]  # y0 and k1 = 50
-    bounds = ([np.min(y),0.05],  # bounds y0 to range of y, 0.05<k1<1000
+    bounds = ([np.min(y),0.01],  # bounds y0 to range of y, 0.05<k1<1000
               [np.max(y),1000])
 
     p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
@@ -213,13 +227,13 @@ def curve_110(x,y):
     bounds:
         min(x) < x0 < max(x)
         min(y) < y0 < max(y)
-        -0.001 < k1 < 0.001  (near zero slope)
+        -0.0001 < k1 < 0.0001  (near zero slope)
         0.05 < k2 < 1000 (positive slope)
     """
     p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,50]  # x0, y0, k1=0, k2=50
 
-    bounds = ([np.min(x),np.min(y),-0.001,0.05],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),0.001,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
+    bounds = ([np.min(x),np.min(y),-0.01,0.05],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),0.01,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
     yfit = piecewise_linear(x, *p)
@@ -239,12 +253,17 @@ def curve_011(x,y):
         min(x) < x0 < max(x)
         min(y) < y0 < max(y)
         0.05 < k1 < 1000 (positive slope)
-        -0.001 < k2 < 0.001  (near zero slope)
+        -0.0001 < k2 < 0.0001  (near zero slope)
     """
     p0 = [(np.max(x)+np.min(x))/2,np.median(y),50,0]  # x0, y0, k1=1, k2=0
 
-    bounds = ([np.min(x),np.min(y),0.05,-0.001],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),1000,0.001])  # 0<k1<1000 and -0.001<k2<0.001
+#    bounds = ([np.min(x),np.min(y),0.05,-0.01],  # bounds x0 and y0 to range of data
+#              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
+    bounds = ([np.min(x),np.min(y),0.01,-0.01],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
+
+
+
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
     yfit = piecewise_linear(x, *p)
@@ -269,8 +288,11 @@ def curve_111(x,y):
     p0 = [(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,
     np.median(np.array(y)),0,0.1,0]
 
-    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.05,-0.001],
-              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
+#    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.05,-0.001],
+#              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
+
+    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.01,0.01,-0.01],
+              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.01,1000.0,0.01])
 
     # curve fitting
     p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds)
@@ -346,7 +368,34 @@ def curve_fit(x,y,curve_type=None):
             BIC.append(BICi)
             model_fits.append((candi,p,BICi))
 
+        print(BIC)
         min_BIC_idx = np.argmin(BIC)
+
+        # Now check whether there's a simpler model that has a BIC less than 10 
+        # more than the chosen model
+        # if min_BIC_idx == 0 or 1, do nothing
+        # if min_BIC_idx == 4 chck if 2 or 3 have less than 10 more than 4 and choose the minimum 
+        if (min_BIC_idx == 4):
+            dif2 = BIC[2]-BIC[4]
+            dif3 = BIC[3]-BIC[4]
+            if ( (dif2 < 10) | (dif3 < 10) ):
+                min_BIC_idx = np.argmin([9999,9999,BIC[2],BIC[3]])
+        # if min_BIC_idx == 2 or 3 then check if the BIC for 0 or 1 is less than 10 more than BIC of 2 or 3
+        # If so, choose whatever is the minimum of 0 or 1
+        # Note that if the original BIC was 4 and 2 or 3 were less than 10 away from it, and 1 and 2 are then less than 10 away from 2 or 3
+        # then a BIC that's more than 10 (but less than 20) away from the original could be chosen.
+        if (min_BIC_idx == 2):
+            dif0 = BIC[0] - BIC[2]
+            dif1 = BIC[1] - BIC[2]
+            if ( (dif0 < 10) | (dif1 < 10) ):
+                min_BIC_idx = np.argmin([BIC[0],BIC[1]])
+        if (min_BIC_idx == 3):
+            dif0 = BIC[0] - BIC[3]
+            dif1 = BIC[0] - BIC[3]
+            if ( (dif0 < 10) | (dif1 < 10) ):
+                min_BIC_idx = np.argmin([BIC[0],BIC[1]]) 
+        
+
 
         return model_fits[min_BIC_idx]
 
