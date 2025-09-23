@@ -115,7 +115,7 @@ def proj_onto_eof(dat, eof, w='sqrtcoslat'):
     """
 
     if (w == 'sqrtcoslat'):
-        weights = np.sqrt(np.cos( dat.lat/180.)*np.pi)
+        weights = np.sqrt(np.cos( (dat.lat/180.)*np.pi))
         weights = weights.expand_dims(dim={'lon':dat.lon.size})
         weights = weights.transpose()
         weights['lon'] = dat.lon
