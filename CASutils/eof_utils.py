@@ -121,7 +121,7 @@ def proj_onto_eof(dat, eof, w='sqrtcoslat'):
         weights['lon'] = dat.lon
 
     num = (dat*weights).dot(eof, dims=['lat','lon'])
-    denom = (eofs).dot( (eofs), dims=['lat','lon'])
+    denom = (eof).dot( (eof), dims=['lat','lon'])
     proj = num/denom
     
     return proj
