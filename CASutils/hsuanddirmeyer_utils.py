@@ -232,8 +232,8 @@ def curve_110(x,y):
     """
     p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,50]  # x0, y0, k1=0, k2=50
 
-    bounds = ([np.min(x),np.min(y),-0.01,0.05],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),0.01,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
+    bounds = ([np.min(x),np.min(y),-0.001,0.01],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),0.001,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
     yfit = piecewise_linear(x, *p)
@@ -259,8 +259,8 @@ def curve_011(x,y):
 
 #    bounds = ([np.min(x),np.min(y),0.05,-0.01],  # bounds x0 and y0 to range of data
 #              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
-    bounds = ([np.min(x),np.min(y),0.01,-0.01],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
+    bounds = ([np.min(x),np.min(y),0.01,-0.001],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),1000,0.001])  # 0<k1<1000 and -0.001<k2<0.001
 
 
 
@@ -291,8 +291,8 @@ def curve_111(x,y):
 #    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.05,-0.001],
 #              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
 
-    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.01,0.01,-0.01],
-              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.01,1000.0,0.01])
+    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.01,-0.001],
+              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
 
     # curve fitting
     p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds)
@@ -368,7 +368,7 @@ def curve_fit(x,y,curve_type=None):
             BIC.append(BICi)
             model_fits.append((candi,p,BICi))
 
-        print(BIC)
+        #print(BIC)
         min_BIC_idx = np.argmin(BIC)
 
         # Now check whether there's a simpler model that has a BIC less than 10 
