@@ -19,8 +19,8 @@ Lilian Zhu, with additions from Isla Simpson (2025)
 """
 
 #--- Wrapper to call the fitting functions and output the data with additional metadata
-def fit_hd2022(x, y, curve_type=None):
-    curve_type, p, bic = curve_fit(np.array(x), np.array(y), curve_type=curve_type)
+def fit_hd2022(x, y, curve_type=None, flatbound=0.01):
+    curve_type, p, bic = curve_fit(np.array(x), np.array(y), curve_type=curve_type, flatbound=flatbound)
     
     curve_type_out = xr.DataArray(curve_type, name='curve_type')
     bic_out = xr.DataArray(bic, name='bic') 
@@ -61,7 +61,7 @@ def fit_hd2022(x, y, curve_type=None):
     return fit_output
 
 #--- Function for overplotting the fit over some range
-def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid'):
+def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid', label=None):
     """ Over plotting the fit over the range xmin to xmax on axis ax using
         fitdata which is the output to the above fit_hd2022 function
     """
@@ -78,7 +78,7 @@ def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid
 
         #- first segment
         xvals = np.array([xmin, x0])
-        ax.plot(xvals, k1*xvals + y0, color=color, linewidth=linewidth, linestyle=linestyle)
+        ax.plot(xvals, k1*xvals + y0, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
         #- second segment
         xvals = np.array([x0, x1])
         ax.plot(xvals, y0 + k2*(xvals - x0), color=color, linewidth=linewidth, linestyle=linestyle)
@@ -90,7 +90,7 @@ def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid
         y0 = np.array(fitdat.y0)
         k = np.array(fitdat.k)
         xvals = np.array([xmin, xmax])
-        ax.plot(xvals, k*xvals + y0, color=color, linewidth=linewidth, linestyle=linestyle)
+        ax.plot(xvals, k*xvals + y0, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     if ((fitdat.curve_type == '110') | (fitdat.curve_type == '011')):
         y0 = np.array(fitdat.y0)
@@ -100,9 +100,11 @@ def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid
 
         #- first segment
         xvals = np.array([xmin, x0])
-        ax.plot(xvals, k1*(xvals-x0) + y0, color=color, linewidth=linewidth, linestyle=linestyle)
+        ax.plot(xvals, k1*(xvals-x0) + y0, color=color, linewidth=linewidth, 
+                linestyle=linestyle, label=label)
         xvals = np.array([x0, xmax])
-        ax.plot(xvals, y0 + k2*(xvals - x0), color=color, linewidth=linewidth, linestyle=linestyle)
+        ax.plot(xvals, y0 + k2*(xvals - x0), color=color, linewidth=linewidth, 
+                linestyle=linestyle)
 
 
     return ax
@@ -173,7 +175,7 @@ def piecewise3sg_linear(x, x0, x1, y0, k1, k2, k3):
 """
 Curve fitting functions for 001, 010, 110, 011, and 111
 """
-def curve_001(x,y):
+def curve_001(x,y, flatbound=0.01):
     """
     order: y0, k1
 
@@ -185,29 +187,30 @@ def curve_001(x,y):
         min(y) < y0 < max(y)
         0 < k1 < 0.01
     """
-    p0 = [np.median(y),0]  # y0 and k1=0
-    bounds = ([np.min(y),0],  # bounds y0 to range of y, 0<k1<0.01
-              [np.max(y),0.01])
+    p0 = [np.median(y),0]  # Initial guess for the parameters (intercept (y0) = median, slope (k1) =0)
+    # ([y0 lower bound, k1 lower bound],[y0 upper bound, k1 upper bound])
+    bounds = ([np.min(y),-1.*flatbound],  # bounds y0 to range of y, -flatbound<k1<flatbound
+              [np.max(y),flatbound])
 
     p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
     yfit = single_linear(x,*p)
 
     return p,yfit
 
-def curve_010(x,y):
+def curve_010(x,y, flatbound=0.01):
     """
     order: y0, k1
 
     initial guesses (p0):
         y0 = median of y
-        k1 = 50
+        k1 = max(y)-min(y)/max(x)-min(x)
 
     bounds:
         min(y) < y0 < max(y)
         0.05 < k1 < 1000
     """
-    p0 = [np.median(y),50]  # y0 and k1 = 50
-    bounds = ([np.min(y),0.01],  # bounds y0 to range of y, 0.05<k1<1000
+    p0 = [np.median(y),(max(y)-min(y))/(max(x)-min(x))]  # y0 and k1 = 50
+    bounds = ([np.min(y),flatbound],  # bounds y0 to range of y, 0.05<k1<1000
               [np.max(y),1000])
 
     p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
@@ -215,7 +218,7 @@ def curve_010(x,y):
 
     return p,yfit
 
-def curve_110(x,y):
+def curve_110(x,y, flatbound=0.01):
     """
     order: x0,y0,k1,k2
 
@@ -230,17 +233,17 @@ def curve_110(x,y):
         -0.0001 < k1 < 0.0001  (near zero slope)
         0.05 < k2 < 1000 (positive slope)
     """
-    p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,50]  # x0, y0, k1=0, k2=50
+    p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,(np.max(y)-np.min(y))/(np.max(x)-np.min(x))]  # x0, y0, k1=0, k2=50
 
-    bounds = ([np.min(x),np.min(y),-0.001,0.01],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),0.001,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
+    bounds = ([np.min(x),np.min(y),-1*flatbound,flatbound],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),flatbound,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
     yfit = piecewise_linear(x, *p)
 
     return p,yfit
 
-def curve_011(x,y):
+def curve_011(x,y, flatbound=0.01):
     """
     order: x0,y0,k1,k2
 
@@ -255,12 +258,12 @@ def curve_011(x,y):
         0.05 < k1 < 1000 (positive slope)
         -0.0001 < k2 < 0.0001  (near zero slope)
     """
-    p0 = [(np.max(x)+np.min(x))/2,np.median(y),50,0]  # x0, y0, k1=1, k2=0
+    p0 = [(np.max(x)+np.min(x))/2,np.median(y),(np.max(y) - np.min(y)) / np.max(x)-np.min(x),0]  # x0, y0, k1=1, k2=0
 
 #    bounds = ([np.min(x),np.min(y),0.05,-0.01],  # bounds x0 and y0 to range of data
 #              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
-    bounds = ([np.min(x),np.min(y),0.01,-0.001],  # bounds x0 and y0 to range of data
-              [np.max(x),np.max(y),1000,0.001])  # 0<k1<1000 and -0.001<k2<0.001
+    bounds = ([np.min(x),np.min(y),flatbound,-1*flatbound],  # bounds x0 and y0 to range of data
+              [np.max(x),np.max(y),1000,flatbound])  # 0<k1<1000 and -0.001<k2<0.001
 
 
 
@@ -270,7 +273,7 @@ def curve_011(x,y):
 
     return p,yfit
 
-def curve_111(x,y):
+def curve_111(x,y, flatbound=0.01):
     """
     order: x0,x1,y0,k1,k2,k3
 
@@ -291,8 +294,8 @@ def curve_111(x,y):
 #    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.05,-0.001],
 #              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
 
-    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.01,-0.001],
-              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
+    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-1*flatbound,flatbound,-1*flatbound],
+              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,flatbound,1000.0,flatbound])
 
     # curve fitting
     p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds)
@@ -332,18 +335,18 @@ Returns tuple of (p,yfit) values where:
     p is a tuple of parameters corresponding to model with lowest BIC
     yfit is an array of predicted y-values from best fitting model
 """
-def curve_fit(x,y,curve_type=None):
+def curve_fit(x,y,curve_type=None, flatbound=0.01):
     if curve_type is not None:
         if curve_type == '001':
-            p,yfit = curve_001(x,y)
+            p,yfit = curve_001(x,y, flatbound=flatbound)
         elif curve_type == '010':
-            p,yfit = curve_010(x,y)
+            p,yfit = curve_010(x,y, flatbound=flatbound)
         elif curve_type == '110':
-            p,yfit = curve_110(x,y)
+            p,yfit = curve_110(x,y, flatbound=flatbound)
         elif curve_type == '011':
-            p,yfit = curve_011(x,y)
+            p,yfit = curve_011(x,y, flatbound=flatbound)
         elif curve_type == '111':
-            p,yfit = curve_111(x,y)
+            p,yfit = curve_111(x,y, flatbound=flatbound)
 
         bic = compute_BIC(curve_type,x,y,yfit)
         curve_type = xr.DataArray(curve_type, name='curve_type')
@@ -354,15 +357,15 @@ def curve_fit(x,y,curve_type=None):
         BIC = []; model_fits = []
         for i,candi in enumerate(candidates):
             if candi == '001':
-                p,yfit = curve_001(x,y)
+                p,yfit = curve_001(x,y, flatbound=flatbound)
             elif candi == '010':
-                p,yfit = curve_010(x,y)
+                p,yfit = curve_010(x,y, flatbound=flatbound)
             elif candi == '110':
-                p,yfit = curve_110(x,y)
+                p,yfit = curve_110(x,y, flatbound=flatbound)
             elif candi == '011':
-                p,yfit = curve_011(x,y)
+                p,yfit = curve_011(x,y, flatbound=flatbound)
             elif candi == '111':
-                p,yfit = curve_111(x,y)
+                p,yfit = curve_111(x,y, flatbound=flatbound)
 
             BICi = compute_BIC(candi,x,y,yfit)
             BIC.append(BICi)
