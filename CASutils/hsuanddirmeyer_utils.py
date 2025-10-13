@@ -19,8 +19,13 @@ Lilian Zhu, with additions from Isla Simpson (2025)
 """
 
 #--- Wrapper to call the fitting functions and output the data with additional metadata
-def fit_hd2022(x, y, curve_type=None, flatbound=0.01):
-    curve_type, p, bic = curve_fit(np.array(x), np.array(y), curve_type=curve_type, flatbound=flatbound)
+def fit_hd2022(x, y, curve_type=None, flatbound=0.01, fitmethod='BIC'):
+
+    if ( (fitmethod != 'BIC') & (fitmethod != '10fold') ):
+        print('choose a valid fit method (BIC or 10fold), exiting')
+        sys.exit()
+
+    curve_type, p, bic = curve_fit(np.array(x), np.array(y), curve_type=curve_type, flatbound=flatbound, fitmethod=fitmethod)
     
     curve_type_out = xr.DataArray(curve_type, name='curve_type')
     bic_out = xr.DataArray(bic, name='bic') 
@@ -175,7 +180,7 @@ def piecewise3sg_linear(x, x0, x1, y0, k1, k2, k3):
 """
 Curve fitting functions for 001, 010, 110, 011, and 111
 """
-def curve_001(x,y, flatbound=0.01):
+def curve_001(x,y, flatbound=0.01, xval=None):
     """
     order: y0, k1
 
@@ -186,6 +191,10 @@ def curve_001(x,y, flatbound=0.01):
     bounds:
         min(y) < y0 < max(y)
         0 < k1 < 0.01
+
+    if xval is not None then returning yfit for the validation data
+    instead of x itself
+
     """
     p0 = [np.median(y),0]  # Initial guess for the parameters (intercept (y0) = median, slope (k1) =0)
     # ([y0 lower bound, k1 lower bound],[y0 upper bound, k1 upper bound])
@@ -193,11 +202,15 @@ def curve_001(x,y, flatbound=0.01):
               [np.max(y),flatbound])
 
     p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
-    yfit = single_linear(x,*p)
+
+    if xval is not None:
+        yfit = single_linear(xval,*p)
+    else:
+        yfit = single_linear(x,*p)
 
     return p,yfit
 
-def curve_010(x,y, flatbound=0.01):
+def curve_010(x,y, flatbound=0.01, xval=None):
     """
     order: y0, k1
 
@@ -209,16 +222,25 @@ def curve_010(x,y, flatbound=0.01):
         min(y) < y0 < max(y)
         0.05 < k1 < 1000
     """
-    p0 = [np.median(y),(max(y)-min(y))/(max(x)-min(x))]  # y0 and k1 = 50
+    p0 = [np.median(y), 50]
     bounds = ([np.min(y),flatbound],  # bounds y0 to range of y, 0.05<k1<1000
               [np.max(y),1000])
 
-    p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
-    yfit = single_linear(x,*p)
+    # Avoiding unfeasible parameters in the case where the slope is negative
+    try:
+        p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
+    except (RuntimeError, ValueError) as err:
+        print(f"010 Fit failed: {err}")
+        p, e = [-999, -999], np.full((2, 2), -999)
+
+    if xval is not None:
+        yfit = single_linear(xval,*p)
+    else:
+        yfit = single_linear(x,*p)
 
     return p,yfit
 
-def curve_110(x,y, flatbound=0.01):
+def curve_110(x,y, flatbound=0.01, xval=None):
     """
     order: x0,y0,k1,k2
 
@@ -233,17 +255,21 @@ def curve_110(x,y, flatbound=0.01):
         -0.0001 < k1 < 0.0001  (near zero slope)
         0.05 < k2 < 1000 (positive slope)
     """
-    p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,(np.max(y)-np.min(y))/(np.max(x)-np.min(x))]  # x0, y0, k1=0, k2=50
+    p0 = [(np.max(x)+np.min(x))/2,np.median(y),0,50]  # x0, y0, k1=0, k2=50
 
     bounds = ([np.min(x),np.min(y),-1*flatbound,flatbound],  # bounds x0 and y0 to range of data
               [np.max(x),np.max(y),flatbound,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
-    yfit = piecewise_linear(x, *p)
+
+    if xval is not None:
+        yfit = piecewise_linear(xval, *p)
+    else:
+        yfit = piecewise_linear(x, *p)
 
     return p,yfit
 
-def curve_011(x,y, flatbound=0.01):
+def curve_011(x,y, flatbound=0.01, xval=None):
     """
     order: x0,y0,k1,k2
 
@@ -258,7 +284,7 @@ def curve_011(x,y, flatbound=0.01):
         0.05 < k1 < 1000 (positive slope)
         -0.0001 < k2 < 0.0001  (near zero slope)
     """
-    p0 = [(np.max(x)+np.min(x))/2,np.median(y),(np.max(y) - np.min(y)) / np.max(x)-np.min(x),0]  # x0, y0, k1=1, k2=0
+    p0 = [(np.max(x)+np.min(x))/2,np.median(y),50,0]  # x0, y0, k1=1, k2=0
 
 #    bounds = ([np.min(x),np.min(y),0.05,-0.01],  # bounds x0 and y0 to range of data
 #              [np.max(x),np.max(y),1000,0.01])  # 0<k1<1000 and -0.001<k2<0.001
@@ -269,11 +295,15 @@ def curve_011(x,y, flatbound=0.01):
 
 
     p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
-    yfit = piecewise_linear(x, *p)
+
+    if xval is not None:
+        yfit = piecewise_linear(xval, *p)
+    else:
+        yfit = piecewise_linear(x, *p)
 
     return p,yfit
 
-def curve_111(x,y, flatbound=0.01):
+def curve_111(x,y, flatbound=0.01, xval=None):
     """
     order: x0,x1,y0,k1,k2,k3
 
@@ -299,7 +329,11 @@ def curve_111(x,y, flatbound=0.01):
 
     # curve fitting
     p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds)
-    yfit = piecewise3sg_linear(x, *p)
+
+    if xval is not None:
+        yfit = piecewise3sg_linear(xval, *p)
+    else:
+        yfit = piecewise3sg_linear(x, *p)
 
     return p,yfit
 
@@ -335,14 +369,14 @@ Returns tuple of (p,yfit) values where:
     p is a tuple of parameters corresponding to model with lowest BIC
     yfit is an array of predicted y-values from best fitting model
 """
-def curve_fit(x,y,curve_type=None, flatbound=0.01):
+def curve_fit(x,y,curve_type=None, flatbound=0.01, fitmethod=None):
     if curve_type is not None:
         if curve_type == '001':
             p,yfit = curve_001(x,y, flatbound=flatbound)
         elif curve_type == '010':
             p,yfit = curve_010(x,y, flatbound=flatbound)
         elif curve_type == '110':
-            p,yfit = curve_110(x,y, flatbound=flatbound)
+            p,yfit = curve_110(x,y, flatbound=0.0001)
         elif curve_type == '011':
             p,yfit = curve_011(x,y, flatbound=flatbound)
         elif curve_type == '111':
@@ -353,6 +387,7 @@ def curve_fit(x,y,curve_type=None, flatbound=0.01):
         return curve_type, p, bic
 
     else:
+
         candidates = ['001', '010', '110', '011', '111']
         BIC = []; model_fits = []
         for i,candi in enumerate(candidates):
@@ -361,46 +396,129 @@ def curve_fit(x,y,curve_type=None, flatbound=0.01):
             elif candi == '010':
                 p,yfit = curve_010(x,y, flatbound=flatbound)
             elif candi == '110':
-                p,yfit = curve_110(x,y, flatbound=flatbound)
+                p,yfit = curve_110(x,y, flatbound=0.0001) # Making sure the dry regime really is flat
             elif candi == '011':
                 p,yfit = curve_011(x,y, flatbound=flatbound)
             elif candi == '111':
                 p,yfit = curve_111(x,y, flatbound=flatbound)
+  
+#            model_fits.append((candi,p))
 
-            BICi = compute_BIC(candi,x,y,yfit)
+            BICi = compute_BIC(candi, x, y, yfit)
+            model_fits.append((candi, p, BICi))
             BIC.append(BICi)
-            model_fits.append((candi,p,BICi))
+ 
+        if fitmethod == 'BIC': # using Bayesian information criterion to determine best fit model
+ 
+           # BICi = compute_BIC(candi,x,y,yfit)
+           # BIC.append(BICi)
+           # model_fits.append((candi,p,BICi))
+           # print(model_fits)
+           # model_fits.append((BICi))
+           # print(model_fits)
 
-        #print(BIC)
-        min_BIC_idx = np.argmin(BIC)
+            min_BIC_idx = np.argmin(BIC)
+    
+            # Now check whether there's a simpler model that has a BIC less than 10 
+            # more than the chosen model
+            # if min_BIC_idx == 0 or 1, do nothing
+            # if min_BIC_idx == 4 chck if 2 or 3 have less than 10 more than 4 and choose the minimum 
+            if (min_BIC_idx == 4):
+                dif2 = BIC[2]-BIC[4]
+                dif3 = BIC[3]-BIC[4]
+                if ( (dif2 < 10) | (dif3 < 10) ):
+                    min_BIC_idx = np.argmin([9999,9999,BIC[2],BIC[3]])
+            # if min_BIC_idx == 2 or 3 then check if the BIC for 0 or 1 is less than 10 more than BIC of 2 or 3
+            # If so, choose whatever is the minimum of 0 or 1
+            # Note that if the original BIC was 4 and 2 or 3 were less than 10 away from it, and 1 and 2 are then less than 10 away from 2 or 3
+            # then a BIC that's more than 10 (but less than 20) away from the original could be chosen.
+            if (min_BIC_idx == 2):
+                dif0 = BIC[0] - BIC[2]
+                dif1 = BIC[1] - BIC[2]
+                if ( (dif0 < 10) | (dif1 < 10) ):
+                    min_BIC_idx = np.argmin([BIC[0],BIC[1]])
+            if (min_BIC_idx == 3):
+                dif0 = BIC[0] - BIC[3]
+                dif1 = BIC[0] - BIC[3]
+                if ( (dif0 < 10) | (dif1 < 10) ):
+                    min_BIC_idx = np.argmin([BIC[0],BIC[1]]) 
+            
+            returnmodel = model_fits[min_BIC_idx]
+ 
+        elif fitmethod == '10fold':
 
-        # Now check whether there's a simpler model that has a BIC less than 10 
-        # more than the chosen model
-        # if min_BIC_idx == 0 or 1, do nothing
-        # if min_BIC_idx == 4 chck if 2 or 3 have less than 10 more than 4 and choose the minimum 
-        if (min_BIC_idx == 4):
-            dif2 = BIC[2]-BIC[4]
-            dif3 = BIC[3]-BIC[4]
-            if ( (dif2 < 10) | (dif3 < 10) ):
-                min_BIC_idx = np.argmin([9999,9999,BIC[2],BIC[3]])
-        # if min_BIC_idx == 2 or 3 then check if the BIC for 0 or 1 is less than 10 more than BIC of 2 or 3
-        # If so, choose whatever is the minimum of 0 or 1
-        # Note that if the original BIC was 4 and 2 or 3 were less than 10 away from it, and 1 and 2 are then less than 10 away from 2 or 3
-        # then a BIC that's more than 10 (but less than 20) away from the original could be chosen.
-        if (min_BIC_idx == 2):
-            dif0 = BIC[0] - BIC[2]
-            dif1 = BIC[1] - BIC[2]
-            if ( (dif0 < 10) | (dif1 < 10) ):
-                min_BIC_idx = np.argmin([BIC[0],BIC[1]])
-        if (min_BIC_idx == 3):
-            dif0 = BIC[0] - BIC[3]
-            dif1 = BIC[0] - BIC[3]
-            if ( (dif0 < 10) | (dif1 < 10) ):
-                min_BIC_idx = np.argmin([BIC[0],BIC[1]]) 
-        
+            model_rmsemean=[]
+            model_serr=[]
+            for i,candi in enumerate(candidates): # loop over candidate models
+                nfolds=10
+                n = np.size(x)
+                ifold = np.arange(n) % nfolds
 
+                allrmse=[]
+                for i in range(nfolds):
 
-        return model_fits[min_BIC_idx]
+                    # set up training and validation data
+                    mask_val = ifold == i
+                    mask_train = ~mask_val
+
+                    x_val = x[mask_val]
+                    x_train = x[mask_train]
+
+                    y_val = y[mask_val]
+                    y_train = y[mask_train]
+
+                    if candi == '001':
+                        p, yfit = curve_001( x_train, y_train, flatbound = flatbound, xval = x_val)
+                    elif candi == '010':
+                        p, yfit = curve_010( x_train, y_train, flatbound = flatbound, xval = x_val)
+                    elif candi == '110':
+                        p, yfit = curve_110( x_train, y_train, flatbound = 0.0001, xval = x_val)
+                    elif candi == '011':
+                        p, yfit = curve_011( x_train, y_train, flatbound = flatbound, xval = x_val) 
+                    elif candi == '111':
+                        p, yfit = curve_111( x_train, y_train, flatbound = flatbound, xval = x_val)
+
+                    rmse = np.sqrt(np.sum(np.square(y_val - yfit)) / len(y_val))
+                    allrmse.append(xr.DataArray(rmse))
+                allrmse = xr.concat(allrmse, dim='ifold')
+                rmsemean = allrmse.mean('ifold')
+                serr = allrmse.std('ifold')/np.sqrt(nfolds) 
+
+                model_fits.append((rmsemean))
+
+                model_rmsemean.append(rmsemean)
+                model_serr.append(serr)
+
+            imin_RSS = np.argmin(model_rmsemean)
+
+            # Now check whether there's a simpler model that has an RSS that's within +/- 1 sigma of this one
+            # if imin_RSS == 0 or 1 do nothing
+            # if imin_RSS == 4 check if 2 or 3 have an RSS within +/- 1 sigma
+            if (imin_RSS == 4):
+                dif2 = model_rmsemean[2] - model_rmsemean[4]
+                dif3 = model_rmsemean[3] - model_rmsemean[4]
+            
+                
+                if ( (dif2 < model_serr[4]) | (dif3 < model_serr[4])):
+                    imin_RSS = np.argmin([99999,99999,dif2, dif3])
+            # If imin_RSS == 2 or 3 check if the RSS for 0 or 1 is within 1 standard deviation
+            # If so, choose whichever is minimum of 0 or 1
+            if (imin_RSS == 2):
+                dif0 = model_rmsemean[0] - model_rmsemean[2]
+                dif1 = model_rmsemean[1] - model_rmsemean[2]
+                if ( (dif0 < model_serr[2]) | (dif1 < model_serr[2]) ):
+                    imin_RSS = np.argmin(([dif0, dif1]))
+            if (imin_RSS == 3):
+                dif0 = model_rmsemean[0] - model_rmsemean[3]
+                dif1 = model_rmsemean[1] - model_rmsemean[3]
+                if ( (dif0 < model_serr[3]) | (dif1 < model_serr[3]) ):
+                    imin_RSS = np.argmin(([dif0, dif1]))
+
+            returnmodel = model_fits[imin_RSS]
+
+        #print(returnmodel)
+
+        return returnmodel 
 
 
 #----functions for generating synthetic data
