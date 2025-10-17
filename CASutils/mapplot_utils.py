@@ -553,7 +553,7 @@ def contourmap_centrallon_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
 
 
 def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, stipplesignif=False, contourlines=None, contourlinescale=1):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, stipplesignif=False, contourlines=None, contourlinescale=1, extrastipple=None, stipplecolor1='black', stipplecolor2='Gray', stipden=1,stipsize=3):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -603,16 +603,32 @@ def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
     ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend="both", transform=ccrs.PlateCarree())
     
     if ( signifdat is not None ):
-        lonsignif = signifdat.lon
-        signifdat, lonsignif = add_cyclic_point( signifdat, coord=lonsignif)
+        #lonsignif = signifdat.lon
+        #signifdat, lonsignif = add_cyclic_point( signifdat, coord=lonsignif)
         if (stipplesignif):
-            density=3
-            ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='none', 
-               hatches=[density*'.',density*'.', density*','],
-               transform = ccrs.PlateCarree())
+            density=stipden
+            stipple_mask = signifdat*nan
+            stipple_mask[::density, ::density] = signifdat[::density, ::density]
+            stipple_mask = stipple_mask.stack(z=('lat','lon'))
+            stipple_mask = stipple_mask.dropna('z')
+            ax.plot(stipple_mask.lon, stipple_mask.lat, marker=".",
+                color=stipplecolor1, markersize=stipsize, linestyle='None', transform=ccrs.PlateCarree())
+
+            #density=3
+            #ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], color=stipplecolor1, 
+            #   hatches=[density*'.',density*'.', density*','],
+            #   transform = ccrs.PlateCarree())
         else:
             ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='lightgray', 
                transform = ccrs.PlateCarree())
+
+    if (extrastipple is not None):
+        stipple_mask = extrastipple*nan
+        stipple_mask[::stipden, ::stipden] = extrastipple[::stipden, ::stipden]
+        stipple_mask = stipple_mask.stack(z=('lat','lon'))
+        stipple_mask = stipple_mask.dropna('z')
+        ax.plot(stipple_mask.lon, stipple_mask.lat, marker=".",
+          color=stipplecolor2, markersize=stipsize, linestyle='None', transform=ccrs.PlateCarree())
 
     ax.set_global()
 
@@ -1172,7 +1188,7 @@ def contourmap_northatlantic_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titles
     
     if (labels):
         ax.set_xticks([-90,-60, -30, 0, 30], crs = ccrs.PlateCarree())
-        ax.set_xticklabels(['90W','60W','30S','0','30E'], fontsize=12)
+        ax.set_xticklabels(['90W','60W','30W','0','30E'], fontsize=12)
         ax.set_yticks([20,40,60,80], crs = ccrs.PlateCarree())
         ax.set_yticklabels(['20N','40N','60N','80N'], fontsize=12)
         ax.xformatter = LongitudeFormatter()
@@ -2213,6 +2229,59 @@ def contourmap_usa_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
 
 
     return ax
+
+def contourmap_westernnorthamerica_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
+ x1, x2, y1, y2, cmap='blue2red', contourlines=False, contourlinescale=1, fsize=10, markersize=10, onecolor=None):
+    """plot a contour map of data onto the USA with no border and state outlines"""
+
+    # set up contour levels and color map
+    nlevs = (cmax-cmin)/ci + 1
+    clevs = np.arange(cmin, cmax+ci,ci)
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs)
+
+    ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection = ccrs.LambertConformal())
+ #   ax.outline_patch.set_visible(False)
+    ax.set_extent([233,285,25,52], crs = ccrs.PlateCarree())
+
+    # get the states shapes
+    states_shp = shpreader.natural_earth(resolution='50m',category='cultural',
+                   name='admin_1_states_provinces_lakes')
+    states_reader = shpreader.Reader(states_shp)
+    states = states_reader.records()
+#    for state in shpreader.Reader(states_shp).geometries():
+#        ax.add_geometries([state],ccrs.PlateCarree(),facecolor='none',
+#              edgecolor=[0,0,0],lw=0.5,zorder=3)
+
+    country_shp = shpreader.natural_earth(resolution='50m',category='cultural',
+                  name='admin_0_countries')
+    country_reader = shpreader.Reader(country_shp)
+    countries = country_reader.records()
+
+    if onecolor is not None:
+        ax.scatter(lon, lat, c=onecolor, marker="o", transform=ccrs.PlateCarree(), zorder=100, s=markersize)
+    else:
+        ax.scatter(lon, lat, c=dat, marker="o", vmin=cmin, vmax=cmax, cmap=mymap, transform=ccrs.PlateCarree(), zorder=100, s=markersize)
+
+    for country in countries:
+        ax.add_geometries([country.geometry], ccrs.PlateCarree(), facecolor='none',
+            edgecolor='black', lw=0.5, zorder=200)
+
+
+#    ax.add_feature(ocean, facecolor='white', edgecolor='white', zorder=100)
+
+#    ax.text(241,25,titlestr, color='black', transform=ccrs.PlateCarree(), fontsize=fsize, zorder=300,
+#         ha='left',va='bottom')
+
+
+    return ax
+
+
+
 
 def contourmap_southwest_scatter_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr,
  x1, x2, y1, y2, cmap='blue2red', contourlines=False, contourlinescale=1, fsize=10, markersize=10):
