@@ -36,3 +36,15 @@ def nmse(obs, mod):
     nmse = numwm / obsprime2wm
 
     return nmse
+
+def compute_rpc(model, model_em, obs, timeaxis='time'):
+    """ Compute the ratio of predictable components"""
+    r = xr.corr(model_em, obs, dim=timeaxis)
+    sig2_em = model_em.std(timeaxis)**2.
+    sig2_ind = model.std(timeaxis)**2.
+    sig2_indm = sig2_ind.mean('M')
+    rpc = r / np.sqrt( sig2_em / sig2_indm)
+    num = r
+    denom = np.sqrt( sig2_em / sig2_indm)
+    return rpc, num, denom
+
