@@ -1,5 +1,6 @@
 import xarray as xr
 import numpy as np
+from math import nan
 
 def cosweightlonlat(darray,lon1,lon2,lat1,lat2, fliplon=True):
     """Calculate the weighted average for an [:,lat,lon] array over the region
