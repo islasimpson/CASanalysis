@@ -85,6 +85,7 @@ def bootgen(darray, nsamples=None, seed=None, nboots=1000, resample=True):
 
         dimboot = [nsamples*nboots]
         dimboot2d = [nboots, nsamples]
+        print(dimboot2d)
         bootcoords = [('iboot', np.arange(0,nboots,1)), ('isample', np.arange(0,nsamples,1))]
         for icoord in range(1,len(dims)):
             dimboot.append(darray[dims[icoord]].size)
@@ -191,24 +192,27 @@ def bootgenchunk_multimem(darray, nyears, nmems, nboots=1000, seed=None):
 
         dimboot = [nyears*nmems*nboots]
         dimboot2d = [nboots, nmems, nyears]
-#        bootcoords = [('iboot', np.arange(0,nboots,1)), ('imem', np.arange(0,nmems,1)), ('isample', np.arange(0,nyears,1))]
-        bootcoords={'iboot': np.arange(0,nboots,1), 'imem':np.arange(0,nmems,1), 'isample':np.arange(0,nyears,1)}
+        bootcoords = [('iboot', np.arange(0,nboots,1)), ('imem', np.arange(0,nmems,1)), ('isample', np.arange(0,nyears,1))]
+#        bootcoords={'iboot': np.arange(0,nboots,1), 'imem':np.arange(0,nmems,1), 'isample':np.arange(0,nyears,1)}
         for icoord in range(1,len(dims)):
             dimboot.append(darray[dims[icoord]].size)
             dimboot2d.append(darray[dims[icoord]].size)
             #bootcoords.append( (dims[icoord], darray[dims[icoord]] ))
-            bootcoords[dims[icoord]] = darray[dims[icoord]]
+            bootcoords.append( (dims[icoord], np.array(darray[dims[icoord]])) )
 
 #        print("you are using an xarray dataarray")
    
     except:
         nmemin = darray.shape[0]
 
-        dimboot = [nyears*nboots]
-        dimboot2d = [nboots, nyears]
+        dimboot = [nyears*nmems*nboots]
+        dimboot2d = [nboots, nmems, nyears]
+        #bootcoords ={'iboot':np.arange(0,nboots,1), 'imem':np.arange(0,nmems,1), 'isample':np.arange(0,nyears,1)}
+        bootcoords = [ ('iboot',np.arange(0,nboots,1)), ('imem', np.arange(0,nmems,1)), ('isample', np.arange(0,nyears,1))]
         for icoord in range(1,len(darray.shape)):
             dimboot.append(darray.shape[icoord])
             dimboot2d.append(darray.shape[icoord])
+            bootcoords.append( (dims[icoord], np.array(darray[dims[icoord]])) )
 
         print("you are using a numpy array")
 
@@ -223,6 +227,7 @@ def bootgenchunk_multimem(darray, nyears, nmems, nboots=1000, seed=None):
     bootdat = np.zeros(dimboot2d)
     for iboot in np.arange(0,nboots,1):
         for imem in np.arange(0,nmems,1):
+            #print(darray[ranu[iboot*nmems + imem]: ranu[iboot*nmems + imem] + nyears])
             bootdat[iboot,imem,...] = darray[ranu[iboot*nmems + imem]:ranu[iboot*nmems+imem]+nyears]
    
 
@@ -242,11 +247,15 @@ def bootgenchunk_multimem(darray, nyears, nmems, nboots=1000, seed=None):
 #    except:
 #        pass
 
-    bootdat = xr.DataArray(bootdat,
-                  coords=[bootcoords[i][1] for i in np.arange(0,len(bootcoords),1)],
-                  dims=[bootcoords[i][0] for i in np.arange(0,len(bootcoords),1)])
+#    bootdat = xr.DataArray(bootdat,
+#                  coords=[bootcoords[i][1] for i in np.arange(0,len(bootcoords),1)],
+#                  dims=[bootcoords[i][0] for i in np.arange(0,len(bootcoords),1)])
+#
+#    print(bootcoords)
+    bootdat = xr.DataArray(np.array(bootdat), coords=bootcoords)
 
-
+#    dims = tuple(bootcoords.keys())
+#    bootdat = xr.DataArray(bootdat, dims=dims, coords=bootcoords)
 
     return bootdat
 
@@ -403,6 +412,8 @@ def boot_corcoefs(a1, a2, nboots=1000):
     rvals = xr.corr(bootdat1, bootdat2, dim='model')
 
     return rvals
+
+
 
 def boot_corsignif_multidim(a1, a2, dim, nboots=1000, seed=None, signan=True):
     """ Output bootstrap significance results for correlation of two arrays over dimension dim """
