@@ -328,7 +328,7 @@ def curve_111(x,y, flatbound=0.01, xval=None):
               [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,flatbound,1000.0,flatbound])
 
     # curve fitting
-    p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds)
+    p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds, maxfev=10000)
 
     if xval is not None:
         yfit = piecewise3sg_linear(xval, *p)
