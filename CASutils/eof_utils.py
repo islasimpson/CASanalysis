@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from eofs.xarray import Eof
 
-def eofcalc_pcnorm(dat, w='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, latneg=None):
+def eofcalc_pcnorm(dat, wtype='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, latneg=None):
     """ Perform EOF analysis across time for an array with lat and lon dimensions
     Output is normalized such that the PC time series has unit variance 
     and the EOF pattern is in the units of dat.
@@ -27,12 +27,17 @@ def eofcalc_pcnorm(dat, w='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, l
     if (dat.dims[0] != 'time'):
         dat = dat.transpose("time",...)
 
+    if isinstance(wtype, str):
+        if (wtype == 'sqrtcoslat'):
+            w = np.sqrt(np.cos( (dat.lat/180.)*np.pi))
+            w = w.expand_dims(dim={'lon':dat.lon.size})
+            w = w.transpose()
+            w['lon'] = dat.lon
 
-    if (w == 'sqrtcoslat'):
-        w = np.sqrt(np.cos( (dat.lat/180.)*np.pi))
-        w = w.expand_dims(dim={'lon':dat.lon.size})
-        w = w.transpose()
-        w['lon'] = dat.lon
+        if (wtype == 'ones'):
+            w = dat*0 + 1
+    else:
+        w = wtype
 
     # Do the EOF calculation
     solver = Eof(dat, weights=w, center=True)
@@ -49,7 +54,7 @@ def eofcalc_pcnorm(dat, w='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, l
 
     return pcs, eofs
 
-def eofcalc_eofnorm(dat, w='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, latneg=None):
+def eofcalc_eofnorm(dat, wtype='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, latneg=None):
     """ Perform EOF analysis across time for an array with lat and lon dimensions
     Output is normalized such that the PC time series has unit variance 
     and the EOF pattern is in the units of dat.
@@ -75,11 +80,17 @@ def eofcalc_eofnorm(dat, w='sqrtcoslat', neofs=1, timeaxis='time', lonneg=None, 
         dat = dat.transpose("time",...)
 
 
-    if (w == 'sqrtcoslat'):
-        w = np.sqrt(np.cos( (dat.lat/180.)*np.pi))
-        w = w.expand_dims(dim={'lon':dat.lon.size})
-        w = w.transpose()
-        w['lon'] = dat.lon
+    if isinstance(wtype, str):
+        if (wtype == 'sqrtcoslat'):
+            w = np.sqrt(np.cos( (dat.lat/180.)*np.pi))
+            w = w.expand_dims(dim={'lon':dat.lon.size})
+            w = w.transpose()
+            w['lon'] = dat.lon
+
+        if (wtype == 'ones'):
+            w = dat*0 + 1
+    else:
+        w = wtype
 
     # Do the EOF calculation
     solver = Eof(dat, weights=w, center=True)

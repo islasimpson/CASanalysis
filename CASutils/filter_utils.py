@@ -408,7 +408,7 @@ def wkfilter_flux(x1, x2, ftaper, spd=1):
     flux = xr.merge([fluxe, fluxw])
     return flux
 
-def flanczos(dat, delt, nw, pcoff, frequency=None):
+def flanczos(dat, delt, nw, pcoff, frequency=None, timeaxis='time'):
     """
     Filter data using a lanczos filter
     Inputs:
@@ -451,7 +451,7 @@ def flanczos(dat, delt, nw, pcoff, frequency=None):
     r = xr.DataArray(r, dims=['frequency'], coords=[frequency], name='response')
 
     # low pass filtered data
-    datlow = dat.rolling(time=len(w), center=True).construct('window').dot(w)
+    datlow = dat.rolling({timeaxis:len(w)}, center=True).construct('window').dot(w)
 
     # high pass filtered data
     dathigh = dat - datlow
@@ -460,7 +460,7 @@ def flanczos(dat, delt, nw, pcoff, frequency=None):
     dathigh = dathigh.rename('highf')
 
     datout = xr.merge([datlow, dathigh, r])
-    return datout,w
+    return datout
 
 
  

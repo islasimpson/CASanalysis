@@ -37,7 +37,7 @@ def nmse(obs, mod):
 
     return nmse
 
-def compute_rpc(model, model_em, obs, timeaxis='time'):
+def compute_rpc_eade(model, model_em, obs, timeaxis='time'):
     """ Compute the ratio of predictable components"""
     r = xr.corr(model_em, obs, dim=timeaxis)
     sig2_em = model_em.std(timeaxis)**2.
@@ -47,4 +47,27 @@ def compute_rpc(model, model_em, obs, timeaxis='time'):
     num = r
     denom = np.sqrt( sig2_em / sig2_indm)
     return rpc, num, denom
+
+def compute_rpc_hardiman(model, model_em, obs, timeaxis='time'):
+    """ Compute the ratio of predictable components following Hardiman et al
+        'Missing eddy feedback may explain weak signal-to-noise ratios in climat predictions"""
+
+    r_mo = xr.corr(model_em, obs, dim=timeaxis)
+
+    sig2signal = model_em.std(timeaxis)**2
+    sig2total = model.std(timeaxis)**2
+    sig2total = sig2total.mean('M')
+
+    n = model.M.size
+
+    r_mm = np.sqrt( (n*(sig2signal/sig2total) -1) / n-1)
+
+    rpc = r_mo / r_mm
+
+    return rpc, r_mo, r_mm
+
+
+
+
+
 
