@@ -24,19 +24,6 @@ def seasonal_climatology_weighted(dat):
     den = days_in_month.rolling(time=3, center=True, min_periods=3).sum()
     dat_seas = (num / den).dropna("time", how="all")
 
-# OLD - buggy for leap years
-#    mons = dat.time.dt.month
-#    wgts = mons.copy(deep=True)
-#    wgts = xr.where( (mons == 1) | (mons == 2) | (mons == 12), days_in_month / dpseas['DJF'], wgts) 
-#    wgts = xr.where( (mons == 3) | (mons == 4) | (mons == 5), days_in_month / dpseas['MAM'], wgts) 
-#    wgts = xr.where( (mons == 6) | (mons == 7) | (mons == 8), days_in_month / dpseas['JJA'], wgts) 
-#    wgts = xr.where( (mons == 9) | (mons == 10) | (mons == 11), days_in_month / dpseas['SON'], wgts) 
-#    datw = dat*wgts
-
-#    wgts_am = days_in_month / 365.
-#    datw_am = dat*wgts_am
-
-#    ds_season = datw.rolling(min_periods=3, center=True, time=3).sum().dropna("time", how='all')
     dat_djf = dat_seas.where(dat_seas.time.dt.month == 1, drop=True).mean('time')
     dat_mam = dat_seas.where(dat_seas.time.dt.month == 4, drop=True).mean('time')
     dat_jja = dat_seas.where(dat_seas.time.dt.month == 7, drop=True).mean('time')
@@ -47,10 +34,6 @@ def seasonal_climatology_weighted(dat):
     den_am = days_in_month.groupby('time.year').sum('time')
     dat_am = (num_am / den_am).mean('year')
 
-# Buggy for leap years
-#    dat_am = datw_am.groupby('time.year').sum('time')
-#    dat_am = dat_am.mean('year')
-  
     dat_djf = dat_djf.rename('DJF')
     dat_mam = dat_mam.rename('MAM')
     dat_jja = dat_jja.rename('JJA')
