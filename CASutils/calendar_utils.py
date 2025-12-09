@@ -19,24 +19,37 @@ dpseas = {'DJF': 90, 'MAM': 92, 'JJA': 92, 'SON': 91 }
 
 def seasonal_climatology_weighted(dat):
     days_in_month = dat.time.dt.days_in_month
-    mons = dat.time.dt.month
-    wgts = mons.copy(deep=True)
-    wgts = xr.where( (mons == 1) | (mons == 2) | (mons == 12), days_in_month / dpseas['DJF'], wgts) 
-    wgts = xr.where( (mons == 3) | (mons == 4) | (mons == 5), days_in_month / dpseas['MAM'], wgts) 
-    wgts = xr.where( (mons == 6) | (mons == 7) | (mons == 8), days_in_month / dpseas['JJA'], wgts) 
-    wgts = xr.where( (mons == 9) | (mons == 10) | (mons == 11), days_in_month / dpseas['SON'], wgts) 
-    datw = dat*wgts
 
-    wgts_am = days_in_month / 365.
-    datw_am = dat*wgts_am
+    num = (dat*days_in_month).rolling(time=3, center=True, min_periods=3).sum()
+    den = days_in_month.rolling(time=3, center=True, min_periods=3).sum()
+    dat_seas = (num / den).dropna("time", how="all")
 
-    ds_season = datw.rolling(min_periods=3, center=True, time=3).sum().dropna("time", how='all')
-    dat_djf = ds_season.where(ds_season.time.dt.month == 1, drop=True).mean('time')
-    dat_mam = ds_season.where(ds_season.time.dt.month == 4, drop=True).mean('time')
-    dat_jja = ds_season.where(ds_season.time.dt.month == 7, drop=True).mean('time')
-    dat_son = ds_season.where(ds_season.time.dt.month == 10, drop=True).mean('time')
-    dat_am = datw_am.groupby('time.year').sum('time')
-    dat_am = dat_am.mean('year')
+# OLD - buggy for leap years
+#    mons = dat.time.dt.month
+#    wgts = mons.copy(deep=True)
+#    wgts = xr.where( (mons == 1) | (mons == 2) | (mons == 12), days_in_month / dpseas['DJF'], wgts) 
+#    wgts = xr.where( (mons == 3) | (mons == 4) | (mons == 5), days_in_month / dpseas['MAM'], wgts) 
+#    wgts = xr.where( (mons == 6) | (mons == 7) | (mons == 8), days_in_month / dpseas['JJA'], wgts) 
+#    wgts = xr.where( (mons == 9) | (mons == 10) | (mons == 11), days_in_month / dpseas['SON'], wgts) 
+#    datw = dat*wgts
+
+#    wgts_am = days_in_month / 365.
+#    datw_am = dat*wgts_am
+
+#    ds_season = datw.rolling(min_periods=3, center=True, time=3).sum().dropna("time", how='all')
+    dat_djf = dat_season.where(dat_season.time.dt.month == 1, drop=True).mean('time')
+    dat_mam = dat_season.where(dat_season.time.dt.month == 4, drop=True).mean('time')
+    dat_jja = dat_season.where(dat_season.time.dt.month == 7, drop=True).mean('time')
+    dat_son = dat_season.where(dat_season.time.dt.month == 10, drop=True).mean('time')
+
+    # annual mean
+    num_am = (dat*days_in_month).groupby('time.year').sum('time')
+    den_am = days_in_month.groupby('time.year').sum('time')
+    dat_am = (num_am / den_am).mean('year')
+
+# Buggy for leap years
+#    dat_am = datw_am.groupby('time.year').sum('time')
+#    dat_am = dat_am.mean('year')
   
     dat_djf = dat_djf.rename('DJF')
     dat_mam = dat_mam.rename('MAM')
@@ -342,6 +355,10 @@ def YYYYMMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%Y%m%d')
     return time
 
+def YYYYMMDDHHMM2date(date, caltype='standard'):
+    time = pd.to_datetime(date, format='%Y%m%d%H%M')
+    return time
+
 def MMDD2date(date, caltype='standard'):
     time = pd.to_datetime(date, format='%m%d')
     return time
@@ -430,3 +447,11 @@ def monthlymean_from_dailymean(dat):
     dat_mon['monyearstr'] = time
     dat_mon = dat_mon.rename({'monyearstr':'time'})
     return dat_mon
+
+def make_time_axis(tstart, tend, freq='monthly', center=True):
+    """ Make a time axis going from tstart to tend with frequency freq
+        center controls whether the time values are in the middle of the month/day etc or not"""
+    time = pd.date_range(tstart, tend, freq='MS')
+    if center:
+        time  = time + pd.DateOffset(days=14)
+    return time
