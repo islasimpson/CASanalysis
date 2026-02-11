@@ -290,16 +290,9 @@ def contourmap_bothoceans_tropics_fill_pos(fig, dat, lon, lat, ci, cmin, cmax, t
             ax.contourf(lon, lat, signifdat, levels=[0,0.5,1], colors='lightgray',
                         transform=ccrs.PlateCarree())
 
-
-
-
-
-
     if (contourlines):
         clevs2 = clevs[ np.abs(clevs) > ci/2 ]
         ax.contour(lon,lat,dat,levels=clevs2, colors='black', transform=ccrs.PlateCarree())
-
-
 
     ax.add_feature(cfeature.COASTLINE)
  
@@ -619,6 +612,8 @@ def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
             #   hatches=[density*'.',density*'.', density*','],
             #   transform = ccrs.PlateCarree())
         else:
+            lonsignif = signifdat.lon
+            signifdat, lonsignif = add_cyclic_point(signifdat, coord=lonsignif)
             ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='lightgray', 
                transform = ccrs.PlateCarree())
 
