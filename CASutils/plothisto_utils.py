@@ -86,7 +86,7 @@ def oplotbar(ax, x, y, bottom=0, color='lightgray', label='', hatch=False, alpha
         ax.bar(x,y,width=width,bottom=bottom,edgecolor=color,facecolor='None',
            color=color, label=label, hatch='///')
     else:
-        ax.bar(x,y,width=width,bottom=bottom,edgecolor='black',color=color,label=label, alpha=alpha, width=width)
+        ax.bar(x,y,width=width,bottom=bottom,edgecolor='black',color=color,label=label, alpha=alpha)
     return ax
 
 
