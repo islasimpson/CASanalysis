@@ -80,13 +80,13 @@ def oplothisto(ax, dat, bins, percent=False, color='lightgray',label=None, alpha
     return ax
 
 
-def oplotbar(ax, x, y, bottom=0, color='lightgray', label='', hatch=False):
+def oplotbar(ax, x, y, bottom=0, color='lightgray', label='', hatch=False, alpha=1):
 
     if (hatch):
         ax.bar(x,y,width=1,bottom=bottom,edgecolor=color,facecolor='None',
            color=color, label=label, hatch='///')
     else:
-        ax.bar(x,y,width=1,bottom=bottom,edgecolor='black',color=color,label=label)
+        ax.bar(x,y,width=1,bottom=bottom,edgecolor='black',color=color,label=label, alpha=alpha)
     return ax
 
 
