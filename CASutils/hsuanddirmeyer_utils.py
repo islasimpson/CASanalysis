@@ -65,6 +65,43 @@ def fit_hd2022(x, y, curve_type=None, flatbound=0.01, fitmethod='BIC'):
     fit_output = xr.merge([curve_type_out, bic_out, p_xr])
     return fit_output
 
+
+#---Function for getting the fit value for a given value of soil moisture
+def get_fit_for_given_sm(xvals, fitdat):
+
+    yvals = xvals*0
+
+    if (fitdat.curve_type == '111'):
+
+        x0 = np.array(fitdat.x0)
+        x1 = np.array(fitdat.x1)
+        y0 = np.array(fitdat.y0)
+        k1 = np.array(fitdat.k1)
+        k2 = np.array(fitdat.k2)
+        k3 = np.array(fitdat.k3)
+        y1 = y0 + k2*(x1 - x0)
+
+        yvals[xvals < x0] = k1*xvals[xvals < x0] + y0
+        yvals[ (xvals >= x0) & (xvals < x1) ] = y0 + k2*(xvals[ (xvals >= x0) & (xvals < x1) ] - x0)
+        yvals[ (xvals >= x1) ]  = k3*(xvals[ (xvals >= x1)] - x1) + y1
+
+    if ((fitdat.curve_type == '010') | (fitdat.curve_type == '001')):
+        y0 = np.array(fitdat.y0)
+        k = np.array(fitdat.k)
+        yvals = k*xvals + y0
+
+    if ((fitdat.curve_type == '110') | (fitdat.curve_type == '011')):
+        y0 = np.array(fitdat.y0)
+        x0 = np.array(fitdat.x0)
+        k1 = np.array(fitdat.k1)
+        k2 = np.array(fitdat.k2)
+
+        yvals[ xvals < x0 ] = k1*( xvals[ xvals < x0 ] - x0 ) + y0
+        yvals[ xvals >= x0 ] = y0 + k2*(xvals[ xvals >= x0 ] - x0)
+
+    return yvals
+
+
 #--- Function for overplotting the fit over some range
 def oplot_fit(ax, xmin, xmax, fitdat, color='red', linewidth=2, linestyle='solid', label=None):
     """ Over plotting the fit over the range xmin to xmax on axis ax using
