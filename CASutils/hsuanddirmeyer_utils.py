@@ -238,12 +238,18 @@ def curve_001(x,y, flatbound=0.01, xval=None):
     bounds = ([np.min(y),-1.*flatbound],  # bounds y0 to range of y, -flatbound<k1<flatbound
               [np.max(y),flatbound])
 
-    p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
-
-    if xval is not None:
-        yfit = single_linear(xval,*p)
-    else:
-        yfit = single_linear(x,*p)
+    try:
+        p,e = optimize.curve_fit(single_linear,x,y,p0=p0,bounds=bounds)
+        if xval is not None:
+            yfit = single_linear(xval,*p)
+        else:
+            yfit = single_linear(x,*p)
+    except:
+        p = p0
+        if xval is not None:
+            yfit = np.zeros_like(xval)
+        else:
+            yfit = np.zeros_like(x)
 
     return p,yfit
 
@@ -297,12 +303,18 @@ def curve_110(x,y, flatbound=0.01, xval=None):
     bounds = ([np.min(x),np.min(y),-1*flatbound,flatbound],  # bounds x0 and y0 to range of data
               [np.max(x),np.max(y),flatbound,1000])  # -0.001<k1<0.001 and 0.001<k2<1000
 
-    p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
-
-    if xval is not None:
-        yfit = piecewise_linear(xval, *p)
-    else:
-        yfit = piecewise_linear(x, *p)
+    try:
+        p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
+        if xval is not None:
+            yfit = piecewise_linear(xval, *p)
+        else:
+            yfit = piecewise_linear(x, *p)
+    except:
+        p = p0
+        if xval is not None:
+            yfit = np.zeros_like(xval)
+        else:
+            yfit = np.zeors_like(x)
 
     return p,yfit
 
@@ -330,13 +342,18 @@ def curve_011(x,y, flatbound=0.01, xval=None):
 
 
 
-
-    p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
-
-    if xval is not None:
-        yfit = piecewise_linear(xval, *p)
-    else:
-        yfit = piecewise_linear(x, *p)
+    try:
+        p,e = optimize.curve_fit(piecewise_linear,x,y,p0=p0,bounds=bounds)
+        if xval is not None:
+            yfit = piecewise_linear(xval, *p)
+        else:
+            yfit = piecewise_linear(x, *p)
+    except:
+        p = p0
+        if xval is not None:
+            yfit = np.zeros_like(xval)
+        else:
+            yfit = np.zeros_like(x)
 
     return p,yfit
 
@@ -365,12 +382,18 @@ def curve_111(x,y, flatbound=0.01, xval=None):
               [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,flatbound,1000.0,flatbound])
 
     # curve fitting
-    p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds, maxfev=10000)
-
-    if xval is not None:
-        yfit = piecewise3sg_linear(xval, *p)
-    else:
-        yfit = piecewise3sg_linear(x, *p)
+    try:
+        p,e = optimize.curve_fit(piecewise3sg_linear,x,y,p0=p0,bounds=bounds, maxfev=10000)
+        if xval is not None:
+            yfit = piecewise3sg_linear(xval, *p)
+        else:
+            yfit = piecewise3sg_linear(x, *p)
+    except:
+        p = p0
+        if xval is not None:
+            yfit = np.zeros_like(xval)
+        else: 
+            yfit = np.zeros_like(x)
 
     return p,yfit
 
