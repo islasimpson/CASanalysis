@@ -314,7 +314,7 @@ def curve_110(x,y, flatbound=0.01, xval=None):
         if xval is not None:
             yfit = np.zeros_like(xval)
         else:
-            yfit = np.zeors_like(x)
+            yfit = np.zeros_like(x)
 
     return p,yfit
 
