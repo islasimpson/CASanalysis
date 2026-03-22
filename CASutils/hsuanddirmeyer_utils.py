@@ -91,6 +91,8 @@ def get_fit_for_given_sm(xvals, fitdat):
         if fitdat.curve_type == 5:
             fitdat.curve_type = '111'
 
+    print(fitdat.curve_type)
+
     if (fitdat.curve_type == '111'):
 
         x0 = np.array(fitdat.x0)
