@@ -80,15 +80,15 @@ def get_fit_for_given_sm(xvals, fitdat):
     # 110 = 4
     # 111 = 5
     if fitdat['curve_type'] == 'int64':
-        if fitdat.curve_type == 1:
+        if fitdat['curve_type'] == 1:
             fitdat['curve_type'] = '001'
-        if fitdat.curve_type == 2:
+        if fitdat['curve_type'] == 2:
             fitdat['curve_type'] = '010'
-        if fitdat.curve_type == 3:
+        if fitdat['curve_type'] == 3:
             fitdat['curve_type'] = '011'
-        if fitdat.curve_type == 4:
+        if fitdat['curve_type'] == 4:
             fitdat['curve_type'] = '110'
-        if fitdat.curve_type == 5:
+        if fitdat['curve_type'] == 5:
             fitdat['curve_type'] = '111'
 
     if (fitdat.curve_type == '111'):
