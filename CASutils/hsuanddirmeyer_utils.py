@@ -229,7 +229,14 @@ def piecewise_linear(x, x0, y0, k1, k2):
     return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
 
 #--- from Hsu and Dirmeyer 3 segment (modified by removing y1)
-def piecewise3sg_linear(x, x0, x1, y0, k1, k2, k3):
+#def piecewise3sg_linear(x, x0, x1, y0, k1, k2, k3):
+#    condlist = [x < x0, (x >= x0) & (x < x1), x >= x1]
+#    funclist = [lambda x:k1*(x-x0) + y0, lambda x:k2*(x-x0) + y0, lambda x:k2*(x1-x0) + y0 + k3*(x-x1)]
+#    return np.piecewise(x, condlist, funclist)
+
+# Modified to ensure positive slope of the transitional regime
+def piecewise3sg_linear(x, x0, dx, y0, k1, k2, k3):
+    x1 = x0 + dx
     condlist = [x < x0, (x >= x0) & (x < x1), x >= x1]
     funclist = [lambda x:k1*(x-x0) + y0, lambda x:k2*(x-x0) + y0, lambda x:k2*(x1-x0) + y0 + k3*(x-x1)]
     return np.piecewise(x, condlist, funclist)
@@ -392,14 +399,30 @@ def curve_111(x,y, flatbound=0.01, xval=None):
         -0.001 < k1,k3 < 0.001  (near zero slope)
         0.05 < k2 < 1000 (positive slope)
     """
-    p0 = [(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,
-    np.median(np.array(y)),0,0.1,0]
+#    p0 = [(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,(np.max(np.array(x)+0.001)+np.min(np.array(x)))/2,
+#    np.median(np.array(y)),0,0.1,0]
+
+    # !!! modified to ensure positive slope
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    xrng = xmax - xmin
+
+    # initial guesses 
+    x0_init = xmin + (0.4*xrng)
+    dx_init = max(0.2*xrng, 1e-6)
+    y0_init = np.median(y)
+
+    p0 = [ x0_init, dx_init, y0_init, 0.0, max(flatbound, 0.1), 0.0 ]
 
 #    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-0.001,0.05,-0.001],
 #              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,0.001,1000.0,0.001])
 
-    bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-1*flatbound,flatbound,-1*flatbound],
-              [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,flatbound,1000.0,flatbound])
+    bounds = (
+           [xmin, 1e-8, ymin, -flatbound, flatbound, -flatbound],
+           [xmax, xrng + 1e-8, ymax + 1e-8, flatbound, 1000.0, flatbound])
+
+    #bounds = ([np.min(np.array(x)),np.min(np.array(x)),np.min(np.array(y)),-1*flatbound,flatbound,-1*flatbound],
+    #          [np.max(np.array(x)+0.001),np.max(np.array(x)+0.001),np.max(np.array(y))+0.001,flatbound,1000.0,flatbound])
 
     # curve fitting
     try:
