@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 def plotlinetime_j2d_monthly(fig, data, x1, x2, y1, y2, titlestr, yrange=None, 
     yticks=None, yticklabels=None, ytitle=None, linecolor=None, points=True, label=None, 
-    linestyle='solid', linewidth=2, markersize=10, fsize=11):
+    linestyle='solid', linewidth=2, markersize=10, fsize=11, xticks=None, xlabel=None):
     """ plot a line plot using monthly data from Jan to Dec
         Input: fig = your figure 
            data = a 365 element array containing data to be plotted
@@ -42,7 +42,12 @@ def plotlinetime_j2d_monthly(fig, data, x1, x2, y1, y2, titlestr, yrange=None,
     ax.set_xticks(monticks)
     ax.set_xticklabels([])
     ax.set_xticks(monticks2, minor=True)
-    ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True)
+    if xticks is not None:
+        ax.set_xticklabels(xticks, minor=True)
+    else:
+        ax.set_xticklabels(['J','F','M','A','M','J','J','A','S','O','N','D'], minor=True)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
     ax.set_title(titlestr, fontsize=fsize+2)
 
     dataplot = np.zeros([14])
