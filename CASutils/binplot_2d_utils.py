@@ -7,6 +7,9 @@ from xhistogram.xarray import histogram
 from CASutils import colormap_utils as mycolors
 from CASutils import linfit_utils as linfit
 from matplotlib.colors import BoundaryNorm
+from matplotlib.patches import Rectangle
+
+from CASutils import colormap_utils as mycolors
 import sys
 
 
@@ -14,7 +17,7 @@ def meanw(dat,axis):
     meanw = (dat*np.cos(np.deg2rad(dat.lat))).sum(axis) / np.sum(np.cos(np.deg2rad(dat.lat)))
     return meanw
 
-def bin_2d_area_weighted(dat, xdat, ydat, xbins, ybins, dim="z", weight=True):
+def bin_2d_area_weighted(dat, xdat, ydat, xbins, ybins, dim="z", weight=True): 
     """
     Bin `dat` in two dimensions according to `xdat` and `ydat`,
     using cosine-latitude area weighting.
@@ -31,9 +34,11 @@ def bin_2d_area_weighted(dat, xdat, ydat, xbins, ybins, dim="z", weight=True):
     # Cosine-latitude area weights
     if (weight):
         weights = np.cos(np.deg2rad(dat.lat))
+        weights = weights.broadcast_like(dat)
     else:
-        weights = np.zeros([dat.size]) + 1
-    weights = xr.DataArray(weights, dims=[dim], name='wgt')
+        weights = xr.ones_like(dat)
+        #weights = np.zeros([dat.size]) + 1
+    #weights = xr.DataArray(weights, dims=[dim], name='wgt')
 
     valid = (
        dat.notnull()
@@ -114,7 +119,43 @@ def bin_2d_area_weighted(dat, xdat, ydat, xbins, ybins, dim="z", weight=True):
     return datout
 
 
+def plot_2d_binned(fig, dat, xbins, ybins, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
+     xlim=None, ylim=None, xticks=None, xticklabels=None, yticks=None, yticklabels=None, 
+     xtitle=None, ytitle=None, cmap='blue2red'):
+    """ Plot a 2D binned plot, already computed with bin_2d_area_weighted """
 
+    ax = fig.add_axes([x1, y1, (x2-x1), (y2-y1)])
+    nlevs = (cmax - cmin)/ci + 1
+    clevs = np.arange(cmin, cmax+ci, ci)
+
+    if (cmap == "blue2red"):
+        mymap = mycolors.blue2red_cmap(nlevs)
+    if (cmap == "precip"):
+        mymap = mycolors.precip_cmap(nlevs) 
+
+    norm = BoundaryNorm(clevs, ncolors = mymap.N, clip=True)
+
+    ax.pcolormesh( xbins, ybins, dat, cmap=mymap, norm=norm, edgecolor='none')
+  
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    if xticks is not None:
+        ax.set_xticks(xticks)
+    if xticklabels is not None:
+        ax.set_xticklabels(xticklabels, fontsize=14)
+    if yticks is not None:
+        ax.set_yticks(yticks)
+    if yticklabels is not None:
+        ax.set_yticklabels(yticklabels, fontsize=14)
+    if xtitle is not None:
+        ax.set_xlabel(xtitle, fontsize=14)
+    if ytitle is not None:
+        ax.set_ylabel(ytitle, fontsize=14)
+
+
+    return ax
 
 
 
