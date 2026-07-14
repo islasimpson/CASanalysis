@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import nan
 
+from xhistogram.xarray import histogram
 from CASutils import colormap_utils as mycolors
 from CASutils import linfit_utils as linfit
 from matplotlib.colors import BoundaryNorm
@@ -12,6 +13,110 @@ import sys
 def meanw(dat,axis):
     meanw = (dat*np.cos(np.deg2rad(dat.lat))).sum(axis) / np.sum(np.cos(np.deg2rad(dat.lat)))
     return meanw
+
+def bin_2d_area_weighted(dat, xdat, ydat, xbins, ybins, dim="z", weight=True):
+    """
+    Bin `dat` in two dimensions according to `xdat` and `ydat`,
+    using cosine-latitude area weighting.
+
+    Inputs:
+    - dat = xr.DataArray must contain dimension 'dim'
+    - xdat, ydat = xr.DataArrays defining x and y values for binning
+    - xbins, ybins = arrays containing bin edges
+    - dim = str, the spatial dimension over which to bin
+ 
+    Returns:
+    """
+
+    # Cosine-latitude area weights
+    if (weight):
+        weights = np.cos(np.deg2rad(dat.lat))
+    else:
+        weights = np.zeros([dat.size]) + 1
+    weights = xr.DataArray(weights, dims=[dim], name='wgt')
+
+    valid = (
+       dat.notnull()
+       & xdat.notnull()
+       & ydat.notnull()
+       & weights.notnull()
+    )
+
+    dat = dat.where(valid)
+    xdat = xdat.where(valid)
+    ydat = ydat.where(valid)
+    weights = weights.where(valid)
+
+    # Sum of weighted dat in each bin
+    weighted_sum = histogram(
+        xdat, 
+        ydat, 
+        bins=[xbins, ybins],
+        weights = dat*weights,
+        dim=[dim]) 
+
+    # Sum of area weights in each bin
+    area_sum = histogram(
+        xdat,
+        ydat,
+        bins=[xbins, ybins],
+        weights=weights,
+        dim=[dim],
+    )
+
+    # Number of valid grid points in each bin
+    count = histogram(
+        xdat,
+        ydat,
+        bins = [xbins,ybins],
+        dim=[dim],
+    )
+
+    # Area mean
+    area_mean = weighted_sum / area_sum
+
+    # Fraction of the total valid area in each bin
+    area_fraction = area_sum / weights.sum(dim)
+
+    # Compute the standard error 
+    if (weight == False):
+        dat1sum = weighted_sum
+    else:
+        dat1sum = histogram(
+            xdat,
+            ydat, 
+            bins=[xbins,ybins],
+            weights = dat,
+            dim = [dim])
+    dat2sum = histogram(
+            xdat,
+            ydat,
+            bins=[xbins,ybins],
+            weights = dat**2,
+            dim = [dim])
+    mean_unweighted = dat1sum / count
+    std = np.sqrt( (dat2sum / count) - mean_unweighted**2)
+    stderr = std / np.sqrt(count)
+
+
+    datout = xr.Dataset(
+        {
+           "dat_mean": area_mean,
+           "area": area_sum,
+           "area_fraction": area_fraction,
+           "number": count,
+           "standard_deviation": std,
+           "standard_error": stderr
+        }
+    )
+
+
+    return datout
+
+
+
+
+
 
 def bin_data_x_y(dat, xdat = None, xbins = None, ydat = None, ybins = None, nxsplit=None, nysplit=None, compute_trend_aft_xbin=False):
     """ Binning a two dimensional data array.  
