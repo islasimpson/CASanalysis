@@ -136,6 +136,7 @@ def plot_2d_binned(fig, dat, xbins, ybins, ci, cmin, cmax, titlestr, x1, x2, y1,
     norm = BoundaryNorm(clevs, ncolors = mymap.N, clip=True)
 
     ax.pcolormesh( xbins, ybins, dat, cmap=mymap, norm=norm, edgecolor='none')
+    ax.set_title(titlestr, fontsize=16)
   
     if xlim is not None:
         ax.set_xlim(xlim)
