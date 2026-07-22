@@ -97,6 +97,17 @@ def eofcalc_eofnorm(dat, wtype='sqrtcoslat', neofs=1, timeaxis='time', lonneg=No
     pcs = solver.pcs(npcs=neofs, pcscaling=0)
     eofs = solver.eofs(neofs=neofs, eofscaling=2)
 
+    # Calculate the area weighted spatial standard deviation of the EOF pattern
+    space_dims = (dat.dims[1],dat.dims[2])
+    eof_mean = eofs.weighted(w).mean(space_dims)
+    eof_std = np.sqrt( ((eofs - eof_mean)**2.).weighted(w).mean(space_dims) )
+
+    # divide the EOFs by the spatial standard deviation and multiply the pc timeseries by it
+    eofs = eofs / eof_std
+    pcs = pcs*eof_std
+
+    # I've checked that pc*eofs reproduces the actual input times sqrt(cos(lat)) when summing over modes
+
     # Flipping the EOF based on a reference point if provided.
     # Note this would need to be altered if different reference points were needed for different EOFS
     # Right now all EOFs are flipped.
