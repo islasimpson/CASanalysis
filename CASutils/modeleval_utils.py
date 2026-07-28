@@ -60,7 +60,7 @@ def compute_rpc_hardiman(model, model_em, obs, timeaxis='time'):
 
     n = model.M.size
 
-    r_mm = np.sqrt( (n*(sig2signal/sig2total) -1) / n-1)
+    r_mm = np.sqrt( (n*(sig2signal/sig2total) -1) / (n-1))
 
     rpc = r_mo / r_mm
 
