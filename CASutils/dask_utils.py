@@ -1,7 +1,7 @@
 import dask
 import socket
 
-def get_dask_cluster(n_workers, walltime):
+def get_dask_cluster(n_workers, walltime, adapt=False):
 
     from dask_jobqueue import PBSCluster
     from dask.distributed import Client
@@ -26,7 +26,10 @@ def get_dask_cluster(n_workers, walltime):
         interface='mgt')
     
     # scale up
-    cluster.scale(n_workers)
+    if adapt == True:
+        cluster.adapt(minimum=1, maximum=n_workers)
+    else:
+        cluster.scale(n_workers)
     #cluster.adapt(minimum=1, maximum=12)
     
     # change your urls to the dask dashboard so that you can see it
