@@ -12,6 +12,16 @@ def calcvpfromhuss(huss, ps):
     e = e/100.
     e = e.rename('vp')
     return e
+
+def calchussfromvp(e,ps):
+    """Calculate specific humidity in kg/kg from vapor pressure in hPa and surface 
+       pressure in Pa """
+    e = e*100.
+    huss = (0.622*e) / (ps - 0.378*e)
+    huss = huss.rename('q')
+    return huss
+
+
 #---------------------------------------------------------------------------------------
 
 #------------------calculate saturation vapor pressure from temperature 
