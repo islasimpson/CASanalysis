@@ -154,6 +154,7 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
     clevs = np.arange(cmin, cmax+ci, ci)
+    clevs = clevs[ np.abs(clevs) > ci/2.
 
     if (cmap == "blue2red"):
         mymap = mycolors.blue2red_cmap(nlevs)
@@ -168,7 +169,7 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1])
 
-    ax.contourf(lat,-1.*np.log10(pre), data, levels=clevs, cmap=mymap, extend='max')
+    ax.contourf(lat,-1.*np.log10(pre), data, levels=clevs, cmap=mymap, extend='both')
     ax.contour(lat,-1.*np.log10(pre), data, levels=clevs[ clevs != 0], colors='black', linewidths=0.5)
     ax.set_ylim(-np.log10(1000.),-np.log10(0.1))
     ax.set_yticks([-np.log10(1000),-np.log10(100),-np.log10(10),-np.log10(1),-np.log10(0.1)])
