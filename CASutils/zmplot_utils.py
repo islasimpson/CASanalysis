@@ -154,7 +154,7 @@ def plotlatlogpre_to0p1(fig, data, lat, pre, ci, cmin, cmax, titlestr, x1=0.1, x
     # set up contour levels and color map
     nlevs = (cmax-cmin)/ci + 1
     clevs = np.arange(cmin, cmax+ci, ci)
-    clevs = clevs[ np.abs(clevs) > ci/2.
+    clevs = clevs[ np.abs(clevs) > ci/2. ]
 
     if (cmap == "blue2red"):
         mymap = mycolors.blue2red_cmap(nlevs)
