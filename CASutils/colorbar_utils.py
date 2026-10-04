@@ -51,6 +51,10 @@ def plotcolorbar(fig, ci, cmin, cmax, titlestr, x1, x2, y1, y2,
     if (cmap == "precip_nowhite"):
         mymap = mycolors.precip_cmap_nowhite(nlevs)
 
+    if (cmap == 'precip_reverse'):
+        mymap = mycolors.precip_cmap_reverse(nlevs,nowhite)
+
+
 
     if (cmap == 'red2blue'):
         mymap = mycolors.red2blue_cmap(nlevs, nowhite)
