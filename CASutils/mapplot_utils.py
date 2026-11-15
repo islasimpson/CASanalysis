@@ -546,7 +546,7 @@ def contourmap_centrallon_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
 
 
 def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, stipplesignif=False, contourlines=None, contourlinescale=1, extrastipple=None, stipplecolor1='black', stipplecolor2='Gray', stipden=1,stipsize=3):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, signifdat=None, stipplesignif=False, contourlines=None, contourlinescale=1, extrastipple=None, stipplecolor1='black', stipplecolor2='Gray', stipden=1,stipsize=3, nowhite=False):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -572,10 +572,10 @@ def contourmap_bothoceans_robinson_pos(fig, dat, lon, lat, ci, cmin, cmax, title
 #    print(clevs)
 
     if (cmap == "blue2red"):
-        mymap = mycolors.blue2red_cmap(nlevs)
+        mymap = mycolors.blue2red_cmap(nlevs, nowhite=nowhite)
 
     if (cmap == "precip"):
-        mymap = mycolors.precip_cmap(nlevs)
+        mymap = mycolors.precip_cmap(nlevs, nowhite=nowhite)
 
     ax = fig.add_axes([x1, y1, x2-x1, y2-y1], projection=ccrs.Robinson(central_longitude=240))
     ax.set_aspect('auto')
