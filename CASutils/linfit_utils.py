@@ -360,7 +360,35 @@ def get_trend_and_bootstrap_signif(dat, block=None):
 
     return slope, signif
 
+def get_trend_and_bootstrap_signif(dat):
+    """
+    function to compute trend and its significance from bootstrapping
+    residuals
 
+    """
+
+    def compute_trend_and_residuals(y):
+        x = np.arange(len(y))
+        b, a = np.polyfit(x, y, 1)
+        trend = a + b*x
+        residuals = y - (a + b*x)
+        return b, trend, residuals
+
+    slope, trend, residuals = xr.apply_ufunc(compute_trend_and_residuals, dat, vectorize=True,
+                   input_core_dims=[['year']], output_core_dims=[[],['year'],['year']], output_dtypes=[float,float,float])
+
+
+    residuals_boot = boot.bootgen(residuals.transpose('year',...), nboots=200)
+    residuals_boot = residuals_boot.rename({'isample':'year'})
+    residuals_boot['year'] = dat.year
+    boot_vals = trend + residuals_boot
+    boot_vals_trend = xr.apply_ufunc(compute_slope, boot_vals, vectorize=True, input_core_dims=[['year']])
+    min95_trend = boot_vals_trend.quantile(0.025, dim='iboot')
+    max95_trend = boot_vals_trend.quantile(0.975, dim='iboot')
+    signif = min95_trend*0 + 1
+    signif = signif.where( ((min95_trend < 0) & (max95_trend > 0)), nan)
+
+    return slope, signif
 
 #def linfit_compute_slope(x,y, axis='time'):
 #    """Calculate a weighted least squares linear fit between arrays x and y
