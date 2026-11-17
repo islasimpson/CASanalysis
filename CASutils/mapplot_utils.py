@@ -763,7 +763,7 @@ def contourmap_bothcontinents_northstereo_pos(fig, dat, lon, lat, ci, cmin, cmax
 
 
 def contourmap_bothcontinents_southstereo_pos(fig, dat, lon, lat, ci, cmin, cmax, titlestr, 
- x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, maskocean=False, latlim=-40):
+ x1, x2, y1, y2, labels=True, cmap="blue2red", fontsize=15, maskocean=False, latlim=-40, signifdat=None, stipplesignif=False):
     """ plot a contour map of 2D data dat with coordinates lon and lat
         Input:
               fig = the figure identifier
@@ -812,6 +812,21 @@ def contourmap_bothcontinents_southstereo_pos(fig, dat, lon, lat, ci, cmin, cmax
         ax.add_feature(cart.feature.OCEAN, zorder=1, edgecolor='k')
 
     ax.contourf(lon, lat, dat, levels=clevs, cmap = mymap, extend="both", transform=ccrs.PlateCarree())
+
+    if ( signifdat is not None ):
+        lonsignif = signifdat.lon
+        signifdat, lonsignif = add_cyclic_point( signifdat, coord=lonsignif)
+
+        if (stipplesignif):
+            density=5
+            ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='none',
+                 hatches=[density*'.',density*'.', density*','],
+               transform = ccrs.PlateCarree())
+
+        else:
+            ax.contourf(lonsignif, lat, signifdat, levels=[0,0.5,1], colors='lightgray',
+            transform = ccrs.PlateCarree())
+
 
     return ax
 
